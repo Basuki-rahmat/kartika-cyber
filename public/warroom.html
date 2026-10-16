@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAR ROOM — Ruang Koordinasi Insiden</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+body{background:#0a0a0f;color:#e2e8f0;font-family:'Segoe UI',system-ui}
+.card{background:linear-gradient(180deg,#12121a,#0d0d14);border:1px solid #1e293b;border-radius:16px}
+.kanban-col{min-height:400px}
+.incident-card{cursor:grab;transition:.15s;border-left:4px solid}
+.incident-card:active{cursor:grabbing}
+.incident-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.pri-CRITICAL{border-left-color:#ef4444;animation:pulse-red 2s infinite}
+.pri-HIGH{border-left-color:#f97316}.pri-MEDIUM{border-left-color:#eab308}.pri-LOW{border-left-color:#22c55e}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.badge-CRITICAL{background:#7f1d1d;color:#fca5a5}.badge-HIGH{background:#7c2d12;color:#fdba74}.badge-MEDIUM{background:#713f12;color:#fde047}.badge-LOW{background:#14532d;color:#86efac}
+.chat-msg{animation:slideIn .2s ease-out}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.drag-over{border-color:#3b82f6!important;background:rgba(59,130,246,.08)!}
+.sla-ok{color:#4ade80}.sla-warn{color:#fbbf24}.sla-over{color:#f87171}
+details summary{cursor:pointer;list-style:none}
+details summary::before{content:'▶';display:inline-block;margin-right:6px;transition:.2s}
+details[open] summary::before{transform:rotate(90deg)}
+</style>
+</head>
+<body class="min-h-screen">
+<header class="sticky top-0 z-50 backdrop-blur bg-[#0a0a0f]/90 border-b border-red-900/40">
+<div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-xl bg-red-500/15 border border-red-500/40 flex items-center justify-center text-2xl">⚔️</div>
+<div>
+<h1 class="font-extrabold tracking-widest text-lg leading-tight">WAR ROOM <span class="text-red-500">// RUANG KOORDINASI INSIDEN</span></h1>
+<p class="text-xs text-slate-400">Kolaborasi real-time • IOC sharing • Incident response • SLA tracking</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-sm">
+<span id="connStatus" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600">🔌 Menghubungkan…</span>
+<span id="userCount" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600">👥 0 online</span>
+<button onclick="exportCSV()" class="btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 font-bold">📥 Export CSV</button>
+<button onclick="exportPDF()" class="btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 font-bold">📄 Export PDF</button>
+<a href="/" class="btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 font-bold">🛡️ Dashboard</a>
+</div>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+<div id="joinBar" class="card p-4 flex items-center gap-3 flex-wrap">
+<input id="inpName" placeholder="Nama panggilan (mis: Dantim Kodam Siliwangi)" class="flex-1 min-w-[200px] text-sm rounded-lg bg-slate-900 border border-slate-700 p-2">
+<button onclick="joinRoom()" class="btn px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 font-bold text-sm">GABUNG WAR ROOM</button>
+</div>
+
+<div id="roomContent" class="hidden space-y-4">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="card p-3"><p class="text-xs text-slate-400">INSIDEN AKTIF</p><p id="statActive" class="text-2xl font-extrabold text-red-400">0</p></div>
+<div class="card p-3"><p class="text-xs text-slate-400">DALAM PROSES</p><p id="statProg" class="text-2xl font-extrabold text-yellow-400">0</p></div>
+<div class="card p-3"><p class="text-xs text-slate-400">TERSELESAIKAN</p><p id="statDone" class="text-2xl font-extrabold text-emerald-400">0</p></div>
+<div class="card p-3"><p class="text-xs text-slate-400">SLA TERLEWATI</p><p id="statOver" class="text-2xl font-extrabold text-red-500">0</p></div>
+</div>
+
+<div class="card p-3 flex items-center gap-3 flex-wrap">
+<input id="searchInc" placeholder="Cari insiden (IP, judul, deskripsi)…" class="flex-1 min-w-[200px] text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" oninput="renderAll()">
+<select id="filterPri" class="text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" onchange="renderAll()">
+<option value="">Semua Prioritas</option>
+<option value="CRITICAL">CRITICAL</option>
+<option value="HIGH">HIGH</option>
+<option value="MEDIUM">MEDIUM</option>
+<option value="LOW">LOW</option>
+</select>
+<select id="filterStatus" class="text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" onchange="renderAll()">
+<option value="">Semua Status</option>
+<option value="OPEN">OPEN</option>
+<option value="IN_PROGRESS">IN PROGRESS</option>
+<option value="RESOLVED">RESOLVED</option>
+</select>
+</div>
+
+<div class="grid lg:grid-cols-3 gap-4">
+<div class="card p-4">
+<div class="flex items-center justify-between mb-3">
+<h2 class="font-bold tracking-wide">🔴 OPEN</h2>
+<span id="cntOpen" class="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 font-bold">0</span>
+</div>
+<div id="colOpen" class="kanban-col space-y-2 rounded-lg border border-slate-700/50 p-2" data-status="OPEN"></div>
+</div>
+<div class="card p-4">
+<div class="flex items-center justify-between mb-3">
+<h2 class="font-bold tracking-wide">🟡 IN PROGRESS</h2>
+<span id="cntProg" class="text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300 font-bold">0</span>
+</div>
+<div id="colProg" class="kanban-col space-y-2 rounded-lg border border-slate-700/50 p-2" data-status="IN_PROGRESS"></div>
+</div>
+<div class="card p-4">
+<div class="flex items-center justify-between mb-3">
+<h2 class="font-bold tracking-wide">🟢 RESOLVED</h2>
+<span id="cntRes" class="text-xs px-2 py-0.5 rounded bg-emerald-900 text-emerald-300 font-bold">0</span>
+</div>
+<div id="colRes" class="kanban-col space-y-2 rounded-lg border border-slate-700/50 p-2" data-status="RESOLVED"></div>
+</div>
+</div>
+
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+<h2 class="font-bold tracking-wide">➕ BUAT INSIDEN BARU</h2>
+</div>
+<div class="grid md:grid-cols-5 gap-2">
+<input id="incTitle" placeholder="Judul insiden" class="text-sm rounded-lg bg-slate-900 border border-slate-700 p-2">
+<input id="incDesc" placeholder="Deskripsi singkat" class="text-sm rounded-lg bg-slate-900 border border-slate-700 p-2">
+<select id="incPri" class="text-sm rounded-lg bg-slate-900 border border-slate-700 p-2">
+<option value="CRITICAL">CRITICAL</option>
+<option value="HIGH">HIGH</option>
+<option value="MEDIUM" selected>MEDIUM</option>
+<option value="LOW">LOW</option>
+</select>
+<select id="incSla" class="text-sm rounded-lg bg-slate-900 border border-slate-700 p-2">
+<option value="15">SLA 15 menit</option>
+<option value="30" selected>SLA 30 menit</option>
+<option value="60">SLA 60 menit</option>
+<option value="120">SLA 120 menit</option>
+</select>
+<button onclick="createIncident()" class="btn px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 font-bold text-sm">BUAT</button>
+</div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-4">
+<div class="card p-4">
+<h2 class="font-bold tracking-wide mb-3">💬 CHAT IOC — BERBAGI INDIKATOR KOMPROMI</h2>
+<div id="chatBox" class="space-y-2 mb-3 overflow-y-auto" style="max-height:320px">
+<p class="text-slate-500 text-xs">Belum ada pesan. Bagikan IOC di sini.</p>
+</div>
+<div class="flex gap-2">
+<input id="chatInput" placeholder="Kirim IOC / pesan…" class="flex-1 text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" onkeydown="if(event.key==='Enter')sendChat()">
+<button onclick="sendChat()" class="btn px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold text-sm">KIRIM</button>
+</div>
+</div>
+<div class="card p-4">
+<h2 class="font-bold tracking-wide mb-3">👥 TIM ONLINE</h2>
+<div id="userList" class="space-y-2">
+<p class="text-slate-500 text-xs">Belum ada anggota.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+<script>
+let socket = null;
+let myName = '';
+let incidents = [];
+const SLA_MIN = { CRITICAL: 15, HIGH: 30, MEDIUM: 60, LOW: 120 };
+
+function joinRoom(){
+  const name = document.getElementById('inpName').value.trim();
+  if(!name) return alert('Isi nama panggilan dulu');
+  myName = name;
+  socket = io();
+  socket.on('connect', () => {
+    document.getElementById('connStatus').textContent = '🟢 TERHUBUNG';
+    document.getElementById('connStatus').className = 'px-3 py-1.5 rounded-lg bg-emerald-900 border border-emerald-600';
+    socket.emit('join', name);
+  });
+  socket.on('disconnect', () => {
+    document.getElementById('connStatus').textContent = '🔴 PUTUS';
+    document.getElementById('connStatus').className = 'px-3 py-1.5 rounded-lg bg-red-900 border border-red-600';
+  });
+  socket.on('init', (data) => {
+    incidents = data.incidents || [];
+    renderAll();
+    document.getElementById('joinBar').classList.add('hidden');
+    document.getElementById('roomContent').classList.remove('hidden');
+  });
+  socket.on('users', (users) => {
+    document.getElementById('userCount').textContent = '👥 ' + users.length + ' online';
+    const ul = document.getElementById('userList');
+    ul.innerHTML = users.map(u => `<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-700"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-sm font-bold">${u.name}</span><span class="text-xs text-slate-500">${u.joinedAt}</span></div>`).join('');
+  });
+  socket.on('incident:new', (inc) => { incidents.unshift(inc); renderAll(); });
+  socket.on('incident:update', (inc) => {
+    const i = incidents.findIndex(x => x.id === inc.id);
+    if(i >= 0) incidents[i] = inc;
+    renderAll();
+  });
+  socket.on('incident:remove', (id) => { incidents = incidents.filter(x => x.id !== id); renderAll(); });
+  socket.on('alarm:attack', (data) => {
+    if(typeof startAlarmSound === 'function') startAlarmSound();
+    const box = document.getElementById('chatBox');
+    if(box.querySelector('p')) box.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'chat-msg px-3 py-2 rounded-lg bg-red-950/60 border border-red-700';
+    div.innerHTML = `<div class="flex items-center gap-2 mb-1"><span class="font-bold text-red-400 text-xs">🚨 ALARM SERANGAN</span><span class="text-[10px] text-slate-500">${nowWIB()}</span></div><p class="text-sm">${data.type} dari ${data.ip} — Insiden ${data.incident} dibuat otomatis</p>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  });
+  socket.on('chat', (msg) => {
+    const box = document.getElementById('chatBox');
+    if(box.querySelector('p')) box.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'chat-msg px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-700';
+    div.innerHTML = `<div class="flex items-center gap-2 mb-1"><span class="font-bold text-red-300 text-xs">${msg.user}</span><span class="text-[10px] text-slate-500">${msg.time}</span></div><p class="text-sm">${msg.text}</p>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+function renderAll(){
+  const q = (document.getElementById('searchInc')?.value || '').toLowerCase();
+  const fp = document.getElementById('filterPri')?.value || '';
+  const fs = document.getElementById('filterStatus')?.value || '';
+  const filtered = incidents.filter(i => {
+    if(q && !(i.title.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q) || (i.id || '').toLowerCase().includes(q))) return false;
+    if(fp && i.priority !== fp) return false;
+    if(fs && i.status !== fs) return false;
+    return true;
+  });
+  ['OPEN','IN_PROGRESS','RESOLVED'].forEach(st => {
+    const col = document.getElementById('col' + st.replace('_',''));
+    col.innerHTML = '';
+    const items = filtered.filter(i => i.status === st);
+    document.getElementById('cnt' + st.replace('_','')).textContent = items.length;
+    items.forEach(inc => col.appendChild(cardEl(inc)));
+  });
+  const active = incidents.filter(i => i.status === 'OPEN').length;
+  const prog = incidents.filter(i => i.status === 'IN_PROGRESS').length;
+  const done = incidents.filter(i => i.status === 'RESOLVED').length;
+  const now = Date.now();
+  const over = incidents.filter(i => i.status !== 'RESOLVED' && i.slaDeadline && new Date(i.slaDeadline) < now).length;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statProg').textContent = prog;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statOver').textContent = over;
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    col.ondragover = e => { e.preventDefault(); col.classList.add('drag-over'); };
+    col.ondragleave = () => col.classList.remove('drag-over');
+    col.ondrop = e => {
+      e.preventDefault(); col.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text');
+      socket.emit('incident:move', { id, status: col.dataset.status });
+    };
+  });
+}
+
+function cardEl(inc){
+  const d = document.createElement('div');
+  d.className = 'incident-card card p-3 pri-' + inc.priority;
+  d.draggable = true;
+  d.ondragstart = e => e.dataTransfer.setData('text', inc.id);
+  const now = Date.now();
+  const slaMs = inc.slaDeadline ? new Date(inc.slaDeadline) - now : null;
+  const slaTxt = inc.slaDeadline ? (slaMs > 0 ? Math.ceil(slaMs/60000) + ' mnt lagi' : 'TERLEWATI!') : '-';
+  const slaCls = !inc.slaDeadline || inc.status === 'RESOLVED' ? 'sla-ok' : (slaMs > 0 && slaMs < 10*60000 ? 'sla-warn' : (slaMs < 0 ? 'sla-over' : 'sla-ok'));
+  const actions = (inc.actions || []).map(a => `<div class="text-[10px] text-slate-500">• ${a.time} — <b>${a.by}</b>: ${a.action}</div>`).join('');
+  d.innerHTML = `
+    <div class="flex items-center justify-between mb-1">
+      <span class="text-[10px] font-mono text-slate-500">${inc.id}</span>
+      <div class="flex gap-1">
+        <span class="text-[10px] px-1.5 py-0.5 rounded font-bold badge-${inc.priority}">${inc.priority}</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 ${slaCls}">${slaTxt}</span>
+      </div>
+    </div>
+    <p class="font-bold text-sm mb-1">${inc.title}</p>
+    <p class="text-xs text-slate-400 mb-2">${inc.desc || '-'}</p>
+    ${inc.assignedTo ? `<p class="text-[10px] text-cyan-300 mb-1">👤 ${inc.assignedTo}</p>` : '<p class="text-[10px] text-slate-500 mb-1">Belum ada yang klaim</p>'}
+    <div class="flex gap-1 mb-2 flex-wrap">
+      ${inc.status === 'OPEN' ? `<button onclick="claim('${inc.id}')" class="text-[10px] px-2 py-0.5 rounded bg-cyan-700 font-bold">KLAIM</button>` : ''}
+      ${inc.status !== 'RESOLVED' ? `<button onclick="blockIp('${inc.id}')" class="text-[10px] px-2 py-0.5 rounded bg-red-700 font-bold">🚫 BLOKIR IP</button>
+      <button onclick="isolateSite('${inc.id}')" class="text-[10px] px-2 py-0.5 rounded bg-orange-700 font-bold">🔒 ISOLASI</button>
+      <button onclick="addAction('${inc.id}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-700">+ AKSI</button>
+      <button onclick="escalate('${inc.id}')" class="text-[10px] px-2 py-0.5 rounded bg-orange-800">↑ ESKALASI</button>
+      <button onclick="moveInc('${inc.id}','RESOLVED')" class="text-[10px] px-2 py-0.5 rounded bg-emerald-800">✓ SELESAI</button>` : ''}
+      <button onclick="addHandover('${inc.id}')" class="text-[10px] px-2 py-0.5 rounded bg-purple-800">📝 HANDOVER</button>
+      <button onclick="deleteIncident('${inc.id}')" class="text-[10px] text-red-400">HAPUS</button>
+    </div>
+    ${actions ? '<details class="mt-1"><summary class="text-[10px] text-slate-400">Riwayat aksi (' + (inc.actions||[]).length + ')</summary><div class="mt-1 space-y-0.5">' + actions + '</div></details>' : ''}
+    ${inc.handover ? `<div class="mt-1 text-[10px] text-purple-300 bg-purple-950/30 rounded p-1">📋 ${inc.handover}</div>` : ''}`;
+  return d;
+}
+
+function createIncident(){
+  const title = document.getElementById('incTitle').value.trim();
+  const desc = document.getElementById('incDesc').value.trim();
+  const priority = document.getElementById('incPri').value;
+  const slaMin = parseInt(document.getElementById('incSla').value);
+  if(!title) return alert('Judul wajib diisi');
+  const slaDeadline = new Date(Date.now() + slaMin * 60000).toISOString();
+  socket.emit('incident:create', { title, desc, priority, createdBy: myName, slaDeadline });
+  document.getElementById('incTitle').value = '';
+  document.getElementById('incDesc').value = '';
+}
+
+function claim(id){ socket.emit('incident:claim', { id, user: myName }); }
+
+function blockIp(id){
+  const inc = incidents.find(x => x.id === id);
+  if(!inc) return;
+  const ipMatch = inc.title.match(/(\d+\.\d+\.\d+\.\d+)/);
+  const ip = ipMatch ? ipMatch[1] : prompt('IP yang akan diblokir:');
+  if(!ip) return;
+  fetch('/api/block-ip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip }) })
+    .then(r => r.json())
+    .then(() => {
+      socket.emit('incident:action', { id, user: myName, action: 'Blokir IP ' + ip });
+      socket.emit('incident:move', { id, status: 'IN_PROGRESS' });
+      notify('IP Diblokir', 'IP ' + ip + ' berhasil diblokir');
+    })
+    .catch(e => alert('Gagal blokir IP: ' + e.message));
+}
+
+function isolateSite(id){
+  const inc = incidents.find(x => x.id === id);
+  if(!inc) return;
+  const site = prompt('Situs yang akan diisolasi (mis: pussansiad, kartika-csirt):');
+  if(!site) return;
+  fetch('/api/isolate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: site }) })
+    .then(r => r.json())
+    .then(() => {
+      socket.emit('incident:action', { id, user: myName, action: 'Isolasi situs ' + site });
+      socket.emit('incident:move', { id, status: 'IN_PROGRESS' });
+      notify('Situs Diisolasi', site + ' berhasil diisolasi');
+    })
+    .catch(e => alert('Gagal isolasi: ' + e.message));
+}
+
+function addAction(id){
+  const a = prompt('Tindakan yang diambil (mis: Blokir IP 198.51.100.23, Isolasi segmen X):');
+  if(a) socket.emit('incident:action', { id, user: myName, action: a });
+}
+
+function escalate(id){ socket.emit('incident:escalate', { id, user: myName }); }
+
+function moveInc(id, status){ socket.emit('incident:move', { id, status }); }
+
+function addHandover(id){
+  const n = prompt('Catatan handover untuk shift berikutnya:');
+  if(n) socket.emit('incident:handover', { id, notes: n });
+}
+
+function deleteIncident(id){ if(confirm('Hapus insiden ' + id + '?')) socket.emit('incident:delete', { id }); }
+
+function sendChat(){
+  const inp = document.getElementById('chatInput');
+  const text = inp.value.trim();
+  if(!text || !socket) return;
+  socket.emit('chat', { user: myName, text });
+  inp.value = '';
+}
+
+function exportCSV(){
+  if(!incidents.length) return alert('Belum ada insiden');
+  const header = 'ID,Judul,Deskripsi,Prioritas,Status,Ditugaskan,Pembuat,Dibuat,Diupdate\n';
+  const rows = incidents.map(i => [i.id, '"' + i.title.replace(/"/g, '""') + '"', '"' + (i.desc || '').replace(/"/g, '""') + '"', i.priority, i.status, i.assignedTo || '-', i.createdBy, i.createdAt, i.updatedAt].join(',')).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'insiden-warroom-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+}
+
+function exportPDF(){
+  if(!incidents.length) return alert('Belum ada insiden');
+  const w = window.open('', '_blank');
+  w.document.write('<html><head><title>Laporan Insiden War Room</title><style>body{font-family:sans-serif;padding:20px}h1{color:#b91c1c}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ccc;padding:6px;font-size:12px;text-align:left}th{background:#f3f4f6}.CRITICAL{color:#dc2626;font-weight:bold}.HIGH{color:#ea580c;font-weight:bold}.MEDIUM{color:#ca8a04;font-weight:bold}.LOW{color:#16a34a;font-weight:bold}</style></head><body>');
+  w.document.write('<h1>LAPORAN INSIDEN WAR ROOM</h1><p>Tanggal: ' + new Date().toLocaleString('id-ID') + '</p>');
+  w.document.write('<table><tr><th>ID</th><th>Judul</th><th>Prioritas</th><th>Status</th><th>Ditugaskan</th><th>Pembuat</th><th>Dibuat</th></tr>');
+  incidents.forEach(i => { w.document.write('<tr><td>' + i.id + '</td><td>' + i.title + '</td><td class="' + i.priority + '">' + i.priority + '</td><td>' + i.status + '</td><td>' + (i.assignedTo || '-') + '</td><td>' + i.createdBy + '</td><td>' + i.createdAt + '</td></tr>'); });
+  w.document.write('</table></body></html>');
+  w.document.close();
+  w.print();
+}
+
+function notify(title, body){
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification(title, { body, icon: '/favicon.ico' });
+  }
+}
+
+if('Notification' in window && Notification.permission === 'default'){
+  Notification.requestPermission();
+}
+
+setInterval(() => { if(incidents.length) renderAll(); }, 30000);
+</script>
+</body>
+</html>
