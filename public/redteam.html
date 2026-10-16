@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEL MERAH — Konsol Penyerang</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#0d0505;color:#fecaca;font-family:'Consolas','Courier New',monospace}
+.card{background:linear-gradient(180deg,#1a0b0b,#0d0505);border:1px solid #7f1d1d;border-radius:16px}
+.glow{box-shadow:0 0 24px rgba(239,68,68,.15)}
+.btn{transition:.15s}.btn:active{transform:scale(.97)}
+.term{background:#000;border:1px solid #7f1d1d;border-radius:10px}
+.blink::after{content:'▊';animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#7f1d1d;border-radius:8px}
+.scan{position:relative}
+.scan::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(239,68,68,.04) 3px 4px);pointer-events:none}
+</style>
+</head>
+<body class="min-h-screen scan">
+<header class="sticky top-0 z-50 backdrop-blur bg-[#0d0505]/90 border-b border-red-900/50">
+<div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-xl bg-red-500/15 border border-red-500/40 flex items-center justify-center text-2xl">☠️</div>
+<div>
+<h1 class="font-extrabold tracking-widest text-lg leading-tight">SEL MERAH <span class="text-red-500">// KONSOL PENYERANG</span></h1>
+<p class="text-xs text-red-300/60">infrastruktur sendiri sebagai target latihan — tanpa login, tanpa ampun</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-sm">
+<span id="clock" class="px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-800">--:--:--</span>
+<a href="/" class="btn px-3 py-1.5 rounded-lg bg-red-800 hover:bg-red-700 font-bold">🛡️ Intip Biru</a>
+</div>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+<!-- INTEL -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="card glow p-4"><p class="text-xs text-red-300/60">TARGET TERPANTAU</p><p class="text-3xl font-extrabold"><span id="tTotal">-</span></p></div>
+<div class="card glow p-4"><p class="text-xs text-red-300/60">MASIH BERDIRI</p><p id="tUp" class="text-3xl font-extrabold text-emerald-400">-</p></div>
+<div class="card glow p-4"><p class="text-xs text-red-300/60">OPERATOR KAMI DIBLOKIR</p><p id="tBlocked" class="text-3xl font-extrabold text-red-400">0</p></div>
+<div class="card glow p-4"><p class="text-xs text-red-300/60">JEJAK TERCIUM MUSUH</p><p id="tTraces" class="text-3xl font-extrabold text-amber-400">0</p></div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-4">
+<!-- SENJATA -->
+<div class="card p-4">
+<h2 class="font-bold tracking-widest">▚ ARSENAL SERANGAN</h2>
+<div class="space-y-2 mt-3 text-sm">
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-01 • PERUSAK TAMPILAN <span class="text-red-400/60 font-mono text-xs">T1491</span></p>
+<p class="text-xs text-red-300/60 font-mono">payload: overwrite portal-pussansiad</p>
+<button onclick="strike('deface')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-01</button>
+</div>
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-02 • INJEKSI WEB <span class="text-red-400/60 font-mono text-xs">T1190</span></p>
+<p class="text-xs text-red-300/60 font-mono">payload: UNION SELECT / &lt;script&gt; / ../../etc/passwd</p>
+<button onclick="strike('sqli')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-02</button>
+</div>
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-03 • BANJIR TRAFIK <span class="text-red-400/60 font-mono text-xs">T1498</span></p>
+<p class="text-xs text-red-300/60 font-mono">payload: 75 req / 10 dtk, 1 IP</p>
+<button onclick="strike('ddos')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-03</button>
+</div>
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-04 • PENYUSUPAN DIAM-DIAM <span class="text-red-400/60 font-mono text-xs">T1595</span></p>
+<p class="text-xs text-red-300/60 font-mono">target: /dokumen-rahasia-kodam /login-bais /admin-backup</p>
+<button onclick="strike('honeypot')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-04</button>
+</div>
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-05 • SEMPROTAN KREDENSIAL <span class="text-red-400/60 font-mono text-xs">T1110</span></p>
+<p class="text-xs text-red-300/60 font-mono">payload: 8 sandi umum → /login-bais (kunci di upaya #6)</p>
+<button onclick="strike('spray')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-05</button>
+</div>
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-06 • INTIP KERENTANAN <span class="text-red-400/60 font-mono text-xs">T1595</span></p>
+<p class="text-xs text-red-300/60 font-mono">payload: raba 12 jalur samar (/.git, /.env, /wp-admin…)</p>
+<button onclick="strike('scan')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-06</button>
+</div>
+<div class="rounded-xl border border-red-800 bg-black/50 p-3">
+<p class="font-bold">S-07 • UNGGAH WEBSHELL <span class="text-red-400/60 font-mono text-xs">T1505</span></p>
+<p class="text-xs text-red-300/60 font-mono">payload: shell.php4 + shell.phtml via /upload</p>
+<button onclick="strike('shell')" class="btn mt-2 w-full py-2 rounded-lg bg-red-800 hover:bg-red-700 font-bold tracking-widest">▲ LANCARKAN S-07</button>
+</div>
+</div>
+</div>
+<!-- KONSOL -->
+<div class="card p-4">
+<h2 class="font-bold tracking-widest">▚ KONSOL OPERASI <span class="blink"></span></h2>
+<div class="grid sm:grid-cols-2 gap-2 mt-2">
+<div>
+<label class="text-xs text-red-300/60">SASARAN SERANGAN</label>
+<select id="tgtSel" class="w-full mt-1 text-sm rounded-lg bg-black border border-red-800 p-2 text-red-200"></select>
+</div>
+<label class="flex items-center gap-2 text-sm mt-5 cursor-pointer">
+<input id="vpnMode" type="checkbox" class="w-4 h-4 accent-red-600">
+<span>MODE VPN <span class="text-red-300/60 text-xs">(rotasi 3 IP, sidik sama — uji atribusi biru)</span></span>
+</label>
+</div>
+<div id="console" class="term font-mono text-[12px] leading-relaxed text-red-200 p-3 mt-2 overflow-y-auto" style="height:380px">root@sel-merah:~# <span class="text-red-300/60">menunggu perintah… pilih senjata di kiri.</span><br></div>
+<div class="mt-2 rounded-lg border border-red-800 bg-black/50 p-3">
+<h2 class="font-bold tracking-widest text-sm">▚ RAMPASAN PERANG <span class="text-red-300/60 font-normal text-xs">— yang berhasil dibawa pulang</span></h2>
+<div id="loot" class="mt-2 text-sm space-y-1"><p class="text-red-300/50">Kosong. Serang dulu, baru menjarah.</p></div>
+<p class="text-xs text-amber-300/70 mt-2">💡 bocoran OSINT: akun latihan portal — NRP <b class="font-mono">310101</b> / sandi <b class="font-mono">kartika1945</b>. Trik kotor: tebak salah 3x dulu di portal korban, baru pakai yang asli — rasakan bedanya.</p>
+</div>
+</div>
+</div>
+
+<div class="grid lg:grid-cols-1 gap-4">
+<!-- KORBAN -->
+<div class="card p-4">
+<h2 class="font-bold tracking-widest">▚ MATA-MATA: PORTAL KORBAN (live)</h2>
+<iframe id="victim" src="/situs-dummy" class="w-full bg-white rounded-lg mt-2" style="height:380px" title="portal korban"></iframe>
+</div>
+</div>
+
+<footer class="text-center text-xs text-red-300/40 pb-8">SEL MERAH • latihan resmi • musuh tiruan untuk menguji GARUDA SHIELD</footer>
+</main>
+
+<script>
+function tick(){ document.getElementById('clock').textContent = new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}); }
+setInterval(tick, 1000); tick();
+function print(html){
+  const c = document.getElementById('console');
+  c.innerHTML += html + '<br>'; c.scrollTop = c.scrollHeight;
+}
+function loot(html){
+  const l = document.getElementById('loot');
+  if(l.querySelector('p')) l.innerHTML = '';
+  l.innerHTML += `<div class="px-2 py-1 rounded bg-red-950/50 border border-red-800">${html}</div>`;
+}
+async function intel(){
+  try {
+    const j = await (await fetch('/api/status')).json();
+    document.getElementById('tTotal').textContent = j.stats.total;
+    document.getElementById('tUp').textContent = j.stats.up;
+    document.getElementById('tBlocked').textContent = j.stats.blocked;
+    document.getElementById('tTraces').textContent = j.stats.attacksToday;
+  } catch(e){}
+}
+setInterval(intel, 5000); intel();
+async function loadTargets(){
+  try {
+    const j = await (await fetch('/api/status')).json();
+    document.getElementById('tgtSel').innerHTML = j.sites.map(s => `<option value="${s.id}"${s.id==='pussansiad'?' selected':''}>${s.name} [${s.status}]</option>`).join('');
+  } catch(e){}
+}
+loadTargets(); setInterval(loadTargets, 10000);
+function tgt(){ return (document.getElementById('tgtSel') || {}).value || 'pussansiad'; }
+function tgtName(){ const o = document.getElementById('tgtSel'); return o && o.selectedOptions.length ? o.selectedOptions[0].text : 'Pussansiad'; }
+function vpn(){ const c = document.getElementById('vpnMode'); return !!(c && c.checked); }
+async function strike(k){
+  const siteId = tgt(), viaVpn = vpn();
+  const titles = { deface: 'S-01 — PERUSAK TAMPILAN', sqli: 'S-02 — INJEKSI WEB', ddos: 'S-03 — BANJIR TRAFIK', honeypot: 'S-04 — PENYUSUPAN', spray: 'S-05 — SEMPROTAN KREDENSIAL', scan: 'S-06 — INTIP KERENTANAN', shell: 'S-07 — UNGGAH WEBSHELL' };
+  print(`<span class="text-red-400 font-bold">═══ ${titles[k] || k} → ${tgtName()} ═══</span>`);
+  print(`root@sel-merah:~# lancarkan ${k.toUpperCase()} → ${tgtName()}${viaVpn ? ' <span class="text-amber-400">[VPN: rotasi IP]</span>' : ''}…`);
+  try {
+    const r = await fetch('/api/simulate/' + k, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ siteId, viaVpn }) });
+    const j = await r.json();
+    document.getElementById('victim').src = '/situs-dummy?site=' + (j.target || siteId) + '&t=' + Date.now();
+    if(k === 'deface'){
+      print('> <span class="text-red-400">HTTP 200 — portal berubah! kukibarkan bendera.</span>');
+      loot(`🚩 ${tgtName()} dirusak (bukti tampil di mata-mata)`);
+      let n = 0;
+      const t = setInterval(() => {
+        document.getElementById('victim').src = '/situs-dummy?site=' + (j.target || siteId) + '&t=' + Date.now();
+        if(++n === 1) print('> <span class="text-red-400">kemenangan terpampang di portal korban…</span>');
+        if(n >= 9){ clearInterval(t); print('> <span class="text-amber-400">?! portal pulih sendiri — biru punya auto-rollback. sial.</span>'); loot('❌ Rampasan S-01 direbut kembali (rollback 10 dtk)'); }
+      }, 2000);
+    }
+    if(k === 'sqli'){
+      const atks = [...new Set((j.verdicts || []).map(v => v.attacker))];
+      print(`> sumber tembakan: ${atks.join(', ')}`);
+      (j.verdicts || []).forEach(v => print(`> [${v.attacker}] GET ${v.payload}<br>&lt; HTTP 403 — <b>${v.reason}</b>${v.actor ? ` <span class="text-amber-400">[${v.actor}]</span>` : ''} ${v.allowed ? '<span class="text-emerald-400">LOLOS!</span>' : '<span class="text-red-400">gugur.</span>'}`));
+      if(j.quarantined) print(`> <span class="text-amber-400">?! biru mengunci SEMUA IP sekaligus (${j.quarantined}) — sidik terbaca! VPN sia-sia.</span>`);
+      const lol = (j.verdicts || []).filter(v => v.allowed).length;
+      print(lol ? '> <span class="text-emerald-400">ada celah! teruskan eksploitasi.</span>' : '> <span class="text-amber-400">semua muatan gugur. WAF biru disiplin.</span>');
+    }
+    if(k === 'ddos'){
+      const atks = (j.attacker || []).join(', ');
+      print(`> membanjiri ${tgtName()} dari ${atks} — ${j.requests} request…`);
+      if(j.quarantined) print(`> <span class="text-amber-400">?! rotasi VPN tercium — biru BLOKIR SERENTAK (${j.quarantined}). sial.</span>`);
+      else print(`> <span class="text-red-400">&lt; request #${j.blockedAtRequest}: HTTP 429 — IP diblokir.</span>`);
+      loot(`💥 Gempuran S-03 → ${tgtName()}${j.quarantined ? ' (digagalkan atribusi)' : ` (terhenti #${j.blockedAtRequest})`}`);
+    }
+    if(k === 'honeypot'){
+      (j.trail || []).forEach(t => print(`> GET ${t.probe}<br>&lt; HTTP 200 — <span class="text-emerald-400">masuk! arsip terbuka.</span>`));
+      print('> POST /login-bais u=admin p=*** → <span class="text-emerald-400">"selamat datang" (salah, tapi lolos?)</span>');
+      loot('📁 renops-2026.pdf — 2,4 MB');
+      loot('📁 daftar-personel.xlsx — 890 KB');
+      loot('🔑 kredensial admin:kodam123 <span class="text-red-300/50">(kelihatannya sah…)</span>');
+    }
+    if(k === 'spray'){
+      (j.attempts || []).forEach(a => print(`> [${a.attacker}] u=admin p=*** <br>&lt; ${a.allowed ? 'HTTP 200 — <span class="text-slate-400">salah, coba lagi (#' + a.attempt + ')</span>' : 'HTTP 403 — <b>' + a.reason + '</b> <span class="text-red-400">TERKUNCI di upaya #' + a.attempt + '</span>'}`));
+      if(j.quarantined) print(`> <span class="text-amber-400">?! tiga IP dikunci serentak (${j.quarantined}) — VPN terbaca!</span>`);
+      loot(`🔑 S-05 → ${tgtName()}: ${(j.attempts || []).filter(a => !a.allowed).length} upaya digagalkan`);
+    }
+    if(k === 'scan'){
+      (j.probes || []).forEach(p => print(`> [${p.attacker}] GET ${p.probe}<br>&lt; ${p.allowed ? 'HTTP 404 — <span class="text-slate-400">sunyi… lanjut (#' + p.probes + ')</span>' : 'HTTP 403 — <b>' + p.reason + '</b> <span class="text-red-400">TERCIUM di rabaan #' + p.probes + '</span>'}`));
+      if(j.quarantined) print(`> <span class="text-amber-400">?! rotasi VPN tercium radar 404 (${j.quarantined})!</span>`);
+      loot(`🔭 S-06 → ${tgtName()}: pengintaian digagalkan`);
+    }
+    if(k === 'shell'){
+      (j.verdicts || []).forEach(v => print(`> [${v.attacker}] ${v.payload}<br>&lt; HTTP 403 — <b>${v.reason}</b> ${v.allowed ? '<span class="text-emerald-400">TERUNGGAH?!</span>' : '<span class="text-red-400">gugur di gerbang.</span>'}`));
+      if(j.quarantined) print(`> <span class="text-amber-400">?! (${j.quarantined})</span>`);
+      const lol = (j.verdicts || []).filter(v => v.allowed).length;
+      print(lol ? '> <span class="text-emerald-400">cangkang tertanam. target milik kita.</span>' : '> <span class="text-amber-400">tak satu pun cangkang lolos filter unggahan.</span>');
+      if(!lol) loot(`🐚 S-07 → ${tgtName()}: webshell GAGAL total`);
+    }
+  } catch(e){ print('> <span class="text-amber-400">gagal melancar (' + e.message + ')</span>'); }
+  intel();
+}
+</script>
+</body>
+</html>

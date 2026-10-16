@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GARUDA SHIELD LITE - Command Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+body{background:#070d12;color:#e2e8f0;font-family:'Segoe UI',system-ui}
+.card{background:linear-gradient(180deg,#0e1a24,#0a141d);border:1px solid #1e3a4a;border-radius:16px}
+.glow{box-shadow:0 0 24px rgba(16,185,129,.15)}
+.badge-up{background:#064e3b;color:#6ee7b7}.badge-attack{background:#7f1d1d;color:#fca5a5}.badge-iso{background:#78350f;color:#fcd34d}
+#map{height:360px;border-radius:12px;z-index:1;background:#05090d}
+.leaflet-popup-content-wrapper{background:#0e1a24;color:#e2e8f0;border:1px solid #1e3a4a;border-radius:10px}
+.leaflet-popup-tip{background:#0e1a24;border:1px solid #1e3a4a}
+.leaflet-popup-content{font-family:'Segoe UI',system-ui;line-height:1.5}
+.leaflet-container{font-family:'Segoe UI',system-ui;background:#05090d}
+.mk{width:16px;height:16px;border-radius:50%;border:2px solid #fff;position:relative}
+.mk-up{background:#10b981;box-shadow:0 0 10px #10b981}
+.mk-atk{background:#eab308;box-shadow:0 0 10px #eab308}
+.mk-iso{background:#ef4444;box-shadow:0 0 10px #ef4444}
+.mk-atk::after,.mk-iso::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:2px solid currentColor;opacity:.7;animation:ping 1.2s ease-out infinite}
+.mk-atk::after{color:#eab308}.mk-iso::after{color:#ef4444}
+@keyframes ping{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.2);opacity:0}}
+.mk{width:16px;height:16px;border-radius:50%;border:2px solid #fff;position:relative}
+.mk-up{background:#10b981;box-shadow:0 0 10px #10b981}
+.mk-atk{background:#eab308;box-shadow:0 0 10px #eab308}
+.mk-iso{background:#ef4444;box-shadow:0 0 10px #ef4444}
+.mk-atk::after,.mk-iso::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:2px solid currentColor;opacity:.7;animation:ping 1.2s ease-out infinite}
+.mk-atk::after{color:#eab308}.mk-iso::after{color:#ef4444}
+@keyframes ping{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.2);opacity:0}}
+.row-atk{border-color:#ef4444 !important;animation:rowpulse 1.2s ease-in-out infinite}
+@keyframes rowpulse{50%{box-shadow:0 0 16px rgba(239,68,68,.55)}}
+.atk-arc{stroke-dasharray:7 7;animation:dashmove .8s linear infinite}
+@keyframes dashmove{to{stroke-dashoffset:-28}}
+.log-row{border-bottom:1px solid #143041}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#1e3a4a;border-radius:8px}
+.btn{transition:.15s}.btn:active{transform:scale(.97)}
+</style>
+</head>
+<body class="min-h-screen">
+<!-- HEADER -->
+<header class="sticky top-0 z-50 backdrop-blur bg-[#070d12]/90 border-b border-emerald-900/40">
+<div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-2xl">🛡️</div>
+<div>
+<h1 class="font-extrabold tracking-wide text-lg leading-tight">GARUDA SHIELD <span class="text-emerald-400">LITE</span></h1>
+<p class="text-xs text-slate-400">Command Dashboard • Situs Vital TNI AD • Kartika CSIRT</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-sm">
+<span id="clock" class="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700">--:--:--</span>
+<span id="roleBadge" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 font-bold">🔓 BELUM LOGIN</span>
+<a href="/situs-dummy" target="_blank" class="btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700">🎯 Situs Dummy</a>
+<a href="/redteam.html" target="_blank" class="btn px-3 py-1.5 rounded-lg bg-red-900 border border-red-600 hover:bg-red-800 font-bold">☠️ Konsol Merah</a>
+<button id="loginBtn" onclick="showLogin(true)" class="btn px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold">Login</button>
+<button id="logoutBtn" onclick="logout()" class="btn px-3 py-1.5 rounded-lg bg-red-800 hover:bg-red-700 font-bold hidden">Logout</button>
+</div>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+<div id="atkBanner" style="display:none" class="p-3 rounded-xl border border-red-600 bg-red-950/60 text-sm font-extrabold tracking-wide animate-pulse"></div>
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="hidden fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4">
+<div class="card p-6 w-full max-w-sm glow">
+<h2 class="font-extrabold text-lg">🔐 Login Command</h2>
+<p class="text-xs text-slate-400 mb-3">Komandan = kontrol penuh • Operator = view + lapor</p>
+<input id="inpUser" class="w-full mb-2 text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" placeholder="username: komandan / operator">
+<input id="inpPass" type="password" class="w-full mb-2 text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" placeholder="password">
+<div class="grid grid-cols-2 gap-2 text-xs text-slate-400 mb-3">
+<button onclick="fillLogin('komandan','garuda123')" class="px-2 py-1.5 rounded bg-slate-800 border border-slate-600">Isi Komandan</button>
+<button onclick="fillLogin('operator','kodam123')" class="px-2 py-1.5 rounded bg-slate-800 border border-slate-600">Isi Operator</button>
+<button onclick="quickLogin('komandan','garuda123')" class="px-2 py-1.5 rounded bg-emerald-900 border border-emerald-600 text-emerald-200 font-bold">⚡ Masuk Komandan</button>
+<button onclick="quickLogin('operator','kodam123')" class="px-2 py-1.5 rounded bg-amber-900 border border-amber-600 text-amber-200 font-bold">⚡ Masuk Operator</button>
+</div>
+<p id="loginErr" class="text-xs text-red-400 mb-2"></p>
+<div class="flex gap-2">
+<button onclick="doLogin()" class="btn flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold">Masuk</button>
+<button onclick="showLogin(false)" class="btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-600">Batal</button>
+</div>
+</div>
+</div>
+<!-- STATS -->
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+<div class="card glow p-4"><p class="text-xs text-slate-400">SITUS AMAN</p><p class="text-3xl font-extrabold text-emerald-400"><span id="stUp">-</span><span class="text-base text-slate-500">/<span id="stTotal">-</span></span></p></div>
+<div class="card glow p-4"><p class="text-xs text-slate-400">SERANGAN HARI INI</p><p id="stAttacks" class="text-3xl font-extrabold text-red-400">0</p></div>
+<div class="card glow p-4"><p class="text-xs text-slate-400">IP DIBLOKIR</p><p id="stBlocked" class="text-3xl font-extrabold text-amber-400">0</p></div>
+<div class="card glow p-4"><p class="text-xs text-slate-400">DEFACE</p><p id="stDeface" class="text-3xl font-extrabold">AMAN</p></div>
+<div class="card glow p-4 col-span-2 lg:col-span-1"><p class="text-xs text-slate-400">BASELINE HASH</p><p id="stHash" class="font-mono text-emerald-300">-</p><p class="text-[11px] text-slate-500 mt-1">Auto-rollback aktif 10 dtk</p></div>
+</div>
+
+<div class="grid lg:grid-cols-5 gap-4">
+<!-- MAP -->
+<div class="card p-4 lg:col-span-3">
+<h2 class="font-bold mb-2">🗺️ Peta Gelar Situs Kodam</h2>
+<p class="text-[11px] text-slate-400 mb-2">🟢 AMAN &nbsp; 🟡 DISERANG / DEGRADED &nbsp; 🔴 TERISOLASI / COMPROMISED — klik marker atau baris Kodam untuk detail satuan. <span class="text-slate-500">Batas provinsi asli (32 provinsi). Tanpa tile luar, tanpa API key.</span></p>
+<div id="map"></div>
+<div id="siteList" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+</div>
+<!-- PORTAL KORBAN (live, sejajar peta) -->
+<div class="card p-4 lg:col-span-2" style="display:flex;flex-direction:column">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<h2 class="font-bold">🎯 Portal Korban (live)</h2>
+<a href="/situs-dummy" target="_blank" class="btn text-xs px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600">BUKA PENUH</a>
+</div>
+<p class="text-[11px] text-slate-400 mb-2">Mengikuti situs yang diserang. Hash: <span id="victimHash" class="font-mono text-emerald-300">-</span> • <span id="victimState">NORMAL</span></p>
+<iframe id="victimFrame" src="/situs-dummy" class="w-full bg-white rounded-lg" style="flex:1;min-height:420px;border:0" title="Portal korban"></iframe>
+</div>
+</div>
+
+<!-- KOMANDO BIRU : PEMULIHAN & PELAPORAN (di bawah peta) -->
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div>
+<h2 class="font-bold tracking-wide">KOMANDO BIRU — PEMULIHAN & PELAPORAN</h2>
+<p class="text-xs text-slate-400">Serangan dilancarkan dari <a href="/redteam.html" target="_blank" class="text-red-300 font-bold">☠️ Konsol Merah</a> (browser berbeda, tanpa login). Di sini: pulihkan arena, ajukan eskalasi, susun laporan.</p>
+</div>
+<button onclick="resetAll()" class="btn text-xs px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 komandan-only">RESET ARENA</button>
+</div>
+<p id="roleHint" class="text-xs text-amber-300 mt-2"></p>
+<div id="rangeOut" class="text-xs mt-2 text-slate-300"></div>
+<div class="flex flex-wrap items-center gap-2 mt-3">
+<a href="/api/report" target="_blank" class="btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 font-bold text-sm">LAPORAN TXT</a>
+<select id="klasSel" class="text-sm rounded-lg bg-slate-900 border border-slate-600 px-2 py-2">
+<option value="TERBATAS">TERBATAS</option>
+<option value="RAHASIA">RAHASIA</option>
+<option value="BIASA">BIASA</option>
+</select>
+<button onclick="downloadPDF()" class="btn px-4 py-2 rounded-lg bg-emerald-800 hover:bg-emerald-700 font-bold text-sm">LAPORAN PDF DINAS</button>
+</div>
+</div>
+
+<!-- GRAFIK + HOAKS -->
+<div class="grid md:grid-cols-2 gap-4">
+<div class="card p-4">
+<h2 class="font-bold">📈 Serangan per Menit (Live)</h2>
+<canvas id="chart" height="160"></canvas>
+</div>
+<div class="card p-4">
+<h2 class="font-bold">🛡️ Cek Hoaks / Disinformasi</h2>
+<p class="text-xs text-slate-400 mb-2">Tempel forward-an WA / link mencurigakan yang menarget prajurit.</p>
+<textarea id="hoaksInput" rows="3" class="w-full text-sm rounded-lg bg-slate-900 border border-slate-700 p-2" placeholder="Contoh: Kodam diserang besok, klik link ini..."></textarea>
+<button onclick="cekHoaks()" class="btn mt-2 w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold">ANALISA AI (GROQ)</button>
+<div id="hoaksOut" class="text-sm mt-2 text-slate-300"></div>
+</div>
+</div>
+
+<!-- LOG -->
+<div class="card p-4">
+<div class="flex items-center justify-between"><h2 class="font-bold">📡 Log Serangan Live</h2><span class="text-xs text-slate-400">auto-refresh 3 dtk</span></div>
+<div class="overflow-x-auto mt-2">
+<table class="w-full text-sm min-w-[640px]">
+<thead><tr class="text-left text-slate-400 text-xs"><th class="py-2">WAKTU</th><th>JENIS</th><th>IP</th><th>DETAIL</th></tr></thead>
+<tbody id="logBody"><tr><td colspan="4" class="py-4 text-center text-slate-500">Belum ada serangan. Luncurkan skenario uji di atas.</td></tr></tbody>
+</table>
+</div>
+</div>
+
+<!-- AUDIT AKSES -->
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<h2 class="font-bold">AKUNTABILITAS — LOG AUDIT PERINTAH</h2>
+<span class="text-xs text-slate-400">siapa memerintah apa, kapan — login untuk melihat</span>
+</div>
+<div class="overflow-x-auto mt-2">
+<table class="w-full text-sm min-w-[640px]">
+<thead><tr class="text-left text-slate-400 text-xs"><th class="py-2">WAKTU</th><th>PELAKU</th><th>PERINTAH</th><th>SASARAN</th><th>KETERANGAN</th></tr></thead>
+<tbody id="auditBody"><tr><td colspan="5" class="py-4 text-center text-slate-500">Login sebagai Operator/Komandan untuk melihat jejak audit.</td></tr></tbody>
+</table>
+</div>
+</div>
+
+<!-- PERSETUJUAN ESKALASI -->
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<h2 class="font-bold">RANTAI KOMANDO — PERSETUJUAN ESKALASI</h2>
+<span class="text-xs text-slate-400">operator mengajukan • komandan memutuskan • login untuk melihat</span>
+</div>
+<div id="reqList" class="mt-2 space-y-2 text-sm"><p class="text-slate-500 text-xs">Login untuk melihat pengajuan.</p></div>
+</div>
+
+<!-- IOC FORENSIK -->
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<h2 class="font-bold">FORENSIK — IOC AKTIF (Indicators of Compromise)</h2>
+<span class="text-xs text-slate-400">dirangkum mesin dari log + status</span>
+</div>
+<div class="grid md:grid-cols-3 gap-2 mt-2">
+<div class="rounded-xl bg-slate-900/70 border border-slate-700 p-2">
+<p class="text-xs font-bold text-red-300 mb-1">IP PENYERANG</p><div id="iocIps" class="text-xs space-y-1"><p class="text-slate-500">Nihil.</p></div>
+</div>
+<div class="rounded-xl bg-slate-900/70 border border-slate-700 p-2">
+<p class="text-xs font-bold text-amber-300 mb-1">HASH FILE</p><div id="iocHash" class="text-xs space-y-1"><p class="text-slate-500">Menunggu data.</p></div>
+</div>
+<div class="rounded-xl bg-slate-900/70 border border-slate-700 p-2">
+<p class="text-xs font-bold text-purple-300 mb-1">POLA MUATAN</p><div id="iocPat" class="text-xs space-y-1"><p class="text-slate-500">Menunggu data.</p></div>
+</div>
+</div>
+</div>
+
+<!-- MESH TAKTIS + HONEYPOT -->
+<div class="grid md:grid-cols-2 gap-4">
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div>
+<h2 class="font-bold tracking-wide">NODE MESH TAKTIS — ONE-CLICK DEPLOYMENT</h2>
+<p class="text-xs text-slate-400">Pos bawah tetap bertempur saat uplink putus. <span id="meshNode" class="font-mono text-emerald-300">-</span></p>
+</div>
+<span id="meshBadge" class="px-3 py-1.5 rounded-lg font-bold text-sm badge-up">MENYIAPKAN…</span>
+</div>
+<div class="grid grid-cols-3 gap-2 mt-3 text-center">
+<div class="rounded-lg bg-slate-900/70 border border-slate-700 p-2"><p class="text-[11px] text-slate-400">ANTREAN OUTBOX</p><p id="meshOutbox" class="text-2xl font-extrabold">0</p></div>
+<div class="rounded-lg bg-slate-900/70 border border-slate-700 p-2"><p class="text-[11px] text-slate-400">SINKRON TERAKHIR</p><p id="meshSync" class="text-xs font-bold mt-2">-</p></div>
+<div class="rounded-lg bg-slate-900/70 border border-slate-700 p-2"><p class="text-[11px] text-slate-400">MODE</p><p id="meshMode" class="text-xs font-bold mt-2">-</p></div>
+</div>
+<div class="flex flex-wrap gap-2 mt-3">
+<button onclick="meshUplink(false)" class="btn komandan-only px-3 py-2 rounded-lg bg-red-900 border border-red-600 font-bold text-sm">SIMULASI SATELIT PUTUS</button>
+<button onclick="meshUplink(true)" class="btn komandan-only px-3 py-2 rounded-lg bg-emerald-800 border border-emerald-600 font-bold text-sm">PULIHKAN UPLINK</button>
+<button onclick="meshSync()" class="btn komandan-only px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 font-bold text-sm">SINKRONKAN SEKARANG</button>
+</div>
+<p class="text-[11px] text-slate-500 mt-2">Pola store-and-forward ringan (sekelas MQTT): peristiwa lokal antre aman, terdorong ke Kartika CSIRT saat tautan pulih.</p>
+</div>
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div>
+<h2 class="font-bold tracking-wide">KANAL DECEPTION — HONEYPOT TAKTIS</h2>
+<p class="text-xs text-slate-400">Umpan tak bertuan: <span class="font-mono">/dokumen-rahasia-kodam • /login-bais • /admin-backup</span></p>
+</div>
+<span class="px-3 py-1.5 rounded-lg font-bold text-sm badge-up">● TERPASANG</span>
+</div>
+<div id="honeyFeed" class="font-mono text-[11px] leading-relaxed text-yellow-200 rounded-lg bg-black/60 border border-yellow-900 p-2 mt-2 overflow-y-auto" style="height:150px">[umpan] sunyi… belum ada penyentuh.<br></div>
+<p class="text-[11px] text-slate-500 mt-2">Sekali sentuh: sidik jari (IP + User-Agent + geo kasar) direkam, IP dikunci permanen sebelum menyentuh server inti. Kredensial yang diketik musuh ditangkap sebagai IOC.</p>
+</div>
+</div>
+
+<!-- RUANG PERANG : CERMIN MUSUH + PERISAI (portal korban sudah sejajar peta) -->
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div>
+<h2 class="font-bold tracking-wide">RUANG PERANG — CERMIN MUSUH • PERISAI</h2>
+<p class="text-xs text-slate-400">Portal korban tampil sejajar peta di atas. Di sini: yang dilihat musuh vs yang menahannya.</p>
+</div>
+</div>
+<div class="grid lg:grid-cols-2 gap-2 mt-3">
+<div class="rounded-xl border border-red-800 bg-black p-2">
+<p class="text-xs font-bold text-red-300 px-1 py-1">CERMIN MUSUH (yang dilihat penyerang)</p>
+<div id="atkTerm" class="font-mono text-[11px] leading-relaxed text-red-200 bg-black rounded-lg p-2 overflow-y-auto" style="height:340px"><span class="text-slate-500">[intelijen] menguping gerak-gerik musuh… serangan dari Konsol Merah akan tercatat di sini.</span><br></div>
+</div>
+<div class="rounded-xl border border-emerald-800 bg-slate-950 p-2">
+<p class="text-xs font-bold text-emerald-300 px-1 py-1">PERISAI PERTAHANAN (yang menahan)</p>
+<div id="defFeed" class="font-mono text-[11px] leading-relaxed text-emerald-200 rounded-lg p-2 overflow-y-auto" style="height:340px">[shield] mesin deteksi siaga…<br></div>
+</div>
+</div>
+<!-- ANALIS AI -->
+<div class="mt-2 rounded-xl border border-amber-700 bg-amber-950/30 p-3">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<p class="text-xs font-bold text-amber-300">ANALIS AI MEDAN LAGA <span id="aiEngine" class="font-normal text-slate-400"></span></p>
+<button onclick="askAnalyst(lastScenario)" class="btn text-xs px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 font-bold">MINTA ANALISA AI</button>
+</div>
+<div id="aiOut" class="text-sm mt-2 text-slate-200">AI akan membacakan jalannya pertempuran setelah skenario diluncurkan — atau tekan tombol di atas.</div>
+</div>
+</div>
+
+<!-- PLAYBOOK SOP -->
+<div class="card p-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div>
+<h2 class="font-bold tracking-wide">SOP PLAYBOOK RESPON CEPAT (IIV — Perpres 82/2022)</h2>
+<p class="text-xs text-slate-400">Tingkat ancaman mengikuti kondisi gelar secara otomatis.</p>
+</div>
+<span id="sopLevel" class="px-4 py-1.5 rounded-lg font-extrabold badge-up">HIJAU — NORMAL</span>
+</div>
+<div class="grid md:grid-cols-3 gap-2 mt-3 text-xs">
+<div id="sopG" class="rounded-xl border border-emerald-700 bg-emerald-950/30 p-3">
+<p class="font-bold text-emerald-300 mb-1">HIJAU — SIAGA NORMAL</p>
+<ol class="list-decimal ml-4 space-y-1 text-slate-300">
+<li>Patroli log dan baseline hash harian.</li>
+<li>Pastikan catuan (backup) konfigurasi mutakhir.</li>
+<li>Edukasi personel: waspada phishing dan forward-an.</li>
+<li>Uji taktis S-01 s.d. S-03 terjadwal tiap pekan.</li>
+</ol>
+</div>
+<div id="sopY" class="rounded-xl border border-slate-700 bg-slate-900/50 p-3 opacity-60">
+<p class="font-bold text-amber-300 mb-1">KUNING — INSIDEN TERBATAS</p>
+<ol class="list-decimal ml-4 space-y-1 text-slate-300">
+<li>Aktifkan posko dan catat seluruh IOC.</li>
+<li>Isolasi segmen terdampak (otoritas Komandan).</li>
+<li>Lapor Dantim CSIRT tiap 30 menit.</li>
+<li>Naikkan pemantauan ke siklus 1 menit.</li>
+</ol>
+</div>
+<div id="sopR" class="rounded-xl border border-slate-700 bg-slate-900/50 p-3 opacity-60">
+<p class="font-bold text-red-300 mb-1">MERAH — COMPROMISED / LUMPUH</p>
+<ol class="list-decimal ml-4 space-y-1 text-slate-300">
+<li>Lockdown total situs terdampak + rollback baseline.</li>
+<li>Blokir seluruh IOC di perimeter.</li>
+<li>Lapor Kartika CSIRT dan Mil-CSIRT (Perpres 82/2022 IIV).</li>
+<li>Gelar forensik, susun Lapinsiber berklasifikasi.</li>
+</ol>
+</div>
+</div>
+<div class="mt-2 rounded-xl border border-cyan-700 bg-cyan-950/30 p-3">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<p class="text-xs font-bold text-cyan-300">PENASIHAT TAKTIS AI — ASISTEN PERWIRA JAGA <span id="advisorEngine" class="font-normal text-slate-400"></span></p>
+<button onclick="askAdvisor(lastScenario)" class="btn text-xs px-3 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 font-bold">MINTA PERINTAH</button>
+</div>
+<div id="advisorOut" class="text-sm mt-2 text-slate-200">AI membaca log mentah, mengelompokkan MITRE ATT&amp;CK, lalu mengeluarkan perintah taktis. Otomatis diminta setiap skenario selesai.</div>
+</div>
+</div>
+
+<footer class="text-center text-xs text-slate-500 pb-8">GARUDA SHIELD LITE • 1 port :3000 • Low-spec ready (i7/16GB/4GB) • Siap integrasi Kartika CSIRT • Perpres 82/2022 IIV</footer>
+</main>
+
+<script>
+let map, markers = {}, chart, hist = new Array(12).fill(0);
+let lastSites = [];
+let prevAtk = [];
+let currentVictim = 'pussansiad';
+let lastLogId = 0;
+let myRole = null, myToken = localStorage.getItem('gs_token') || null;
+function authH(){ return myToken ? { 'Content-Type':'application/json', 'x-token': myToken } : { 'Content-Type':'application/json' }; }
+function showLogin(v){ document.getElementById('loginModal').classList.toggle('hidden', !v); }
+function fillLogin(u,p){ document.getElementById('inpUser').value=u; document.getElementById('inpPass').value=p; }
+async function doLogin(){
+  const username = document.getElementById('inpUser').value, password = document.getElementById('inpPass').value;
+  try {
+    const j = await getJSON('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    myToken = j.token; myRole = j.role; localStorage.setItem('gs_token', myToken);
+    showLogin(false); applyRole();
+  } catch(e){ document.getElementById('loginErr').textContent = e.message; }
+}
+async function quickLogin(username, password){
+  try {
+    const j = await getJSON('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    myToken = j.token; myRole = j.role; localStorage.setItem('gs_token', myToken);
+    showLogin(false); applyRole(); refresh();
+  } catch(e){ document.getElementById('loginErr').textContent = e.message; }
+}
+async function logout(){ try { await fetch('/api/logout',{method:'POST',headers:authH()}); } catch(e){} myToken=null; myRole=null; localStorage.removeItem('gs_token'); applyRole(); refresh(); }
+async function checkMe(){
+  if(!myToken){ applyRole(); return; }
+  const r = await fetch('/api/me?token='+myToken); const j = await r.json();
+  myRole = j.login ? j.role : null; if(!j.login){ myToken=null; localStorage.removeItem('gs_token'); }
+  applyRole(j);
+}
+function applyRole(me){
+  const badge = document.getElementById('roleBadge');
+  const isKom = myRole === 'komandan', isOp = myRole === 'operator';
+  badge.textContent = isKom ? '⭐ KOMANDAN' : (isOp ? '🛰️ OPERATOR' : '🔓 BELUM LOGIN');
+  badge.className = 'px-3 py-1.5 rounded-lg font-bold ' + (isKom ? 'badge-up' : (isOp ? 'badge-iso' : 'bg-slate-800 border border-slate-600'));
+  document.getElementById('loginBtn').classList.toggle('hidden', !!(isKom||isOp));
+  document.getElementById('logoutBtn').classList.toggle('hidden', !(isKom||isOp));
+  document.querySelectorAll('.komandan-only').forEach(el => {
+    el.style.opacity = isKom ? '1' : '0.35';
+    el.style.pointerEvents = isKom ? 'auto' : 'none';
+  });
+  document.getElementById('roleHint').textContent = isKom ? 'MODE KOMANDAN: isolasi, reset arena, sinkron mesh, dan putusan eskalasi aktif.' : (isOp ? 'MODE OPERATOR: pantau, cek hoaks, ajukan eskalasi, unduh laporan. Eksekusi milik Komandan.' : 'Serangan datang dari Konsol Merah. Masuk untuk memerintah pertahanan.');
+}
+function downloadPDF(){ const k = (document.getElementById('klasSel')||{}).value || 'TERBATAS'; window.open('/api/report.pdf?klas=' + k + '&token=' + (myToken||''), '_blank'); }
+function tick(){ document.getElementById('clock').textContent = new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}); }
+setInterval(tick, 1000); tick();
+
+// PETA GELAR — Leaflet + batas provinsi ASLI (superpikar/indonesia-geojson,
+// disalin lokal ke data/. TANPA tile luar, TANPA API key, jalan offline.
+// Atribusi: data © superpikar.
+map = L.map('map', { zoomControl: true, attributionControl: true }).setView([-2.5, 118], 5);
+fetch('data/indonesia-province-simple.json').then(r => r.json()).then(g => {
+  const layer = L.geoJSON(g, { style: { color: '#1e4a5f', weight: 1.2, fillColor: '#10222e', fillOpacity: 0.95 } }).addTo(map);
+  map.fitBounds(layer.getBounds(), { padding: [15, 15] });
+}).catch(() => {});
+map.attributionControl.setPrefix('GARUDA SHIELD');
+L.circle([-6.23, 106.845], { radius: 90000, color: '#10b981', weight: 1, opacity: .35, fillOpacity: .04 }).addTo(map)
+  .bindTooltip('SEKTOR PERTAHANAN PUSAT', { permanent: false, direction: 'top' });
+const foeLayer = L.layerGroup().addTo(map);
+function plotFoes(actors){
+  foeLayer.clearLayers();
+  (actors || []).filter(a => a.ll).forEach(a => {
+    L.marker([a.ll[0], a.ll[1]], { icon: L.divIcon({ className: '', html: `<div class="mk mk-iso" title="${a.id}"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] }) })
+      .bindPopup(`<b>☠️ ${a.id}</b> ${a.vpn ? '[VPN?]' : ''}<br>${a.geo || ''}<br>IP: <span style="font-family:monospace">${a.ips.join(', ')}</span><br>Serangan: ${a.hits}x • ${a.quarantined ? '<b>DIBLOKIR SERENTAK</b>' : 'terpantau'}${a.gmaps ? `<br><a href="${a.gmaps}" target="_blank"><b>📍 Buka Google Maps</b></a>` : ''}`)
+      .addTo(foeLayer);
+  });
+}
+let arcs = [];
+function sitePos(id){ const s = (lastSites || []).find(x => x.id === id); return s ? [s.lat, s.lng] : [-6.23, 106.84]; }
+function drawArc(from, toId, color){
+  arcs.forEach(a => map.removeLayer(a)); arcs = [];
+  const line = L.polyline([from, sitePos(toId)], { color, weight: 2.5, opacity: .9, className: 'atk-arc' }).addTo(map);
+  const dot = L.circleMarker(from, { radius: 5, color, weight: 2, fillColor: color, fillOpacity: .8 }).addTo(map)
+    .bindTooltip('SUMBER SERANGAN (indikasi)', { direction: 'top' });
+  arcs = [line, dot];
+  setTimeout(() => { arcs.forEach(a => map.removeLayer(a)); arcs = []; }, 20000);
+}
+const ATK_ORIGIN = { 'S-01': [-1.2, 109.5], 'S-02': [1.35, 103.8], 'S-03': [3.1, 101.7], 'S-04': [-4.5, 114.5], 'S-05': [0.5, 104.5], 'S-06': [2.2, 100.5], 'S-07': [-0.8, 113.5] };
+const ATK_TARGET = { 'S-01': 'pussansiad', 'S-02': 'pussansiad', 'S-03': 'kartika-csirt', 'S-04': 'pussansiad' };
+const ATK_COLOR = { 'S-01': '#ef4444', 'S-02': '#fb923c', 'S-03': '#c084fc', 'S-04': '#eab308', 'S-05': '#f472b6', 'S-06': '#38bdf8', 'S-07': '#a3e635' };
+
+chart = new Chart(document.getElementById('chart'), { type:'line',
+data:{labels:hist.map((_,i)=>`-${11-i}m`), datasets:[{data:hist, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.15)', fill:true, tension:.4}]},
+options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{color:'#64748b'}},x:{ticks:{color:'#64748b'}}}}});
+
+async function getJSON(url, opts){
+  const r = await fetch(url, opts);
+  const ct = r.headers.get('content-type') || '';
+  if(!r.ok || !ct.includes('json')){
+    const t = await r.text().catch(()=> '');
+    throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 80));
+  }
+  return r.json();
+}
+function setConn(ok, msg){
+  let b = document.getElementById('connBanner');
+  if(!b){
+    const m = document.querySelector('main');
+    b = document.createElement('div');
+    b.id = 'connBanner';
+    b.className = 'p-3 rounded-xl border border-red-600 bg-red-950/50 text-sm font-bold';
+    m.prepend(b);
+  }
+  b.style.display = ok ? 'none' : 'block';
+  if(!ok) b.textContent = 'HUBUNGAN DATA TERGANGGU (' + (msg||'unknown') + '). Konsol tetap hidup via management plane — masuk sebagai Komandan lalu RESET ARENA.';
+}
+async function refresh(){
+  try {
+  const j = await getJSON('/api/status');
+  document.getElementById('stUp').textContent = j.stats.up;
+  document.getElementById('stTotal').textContent = j.stats.total;
+  document.getElementById('stAttacks').textContent = j.stats.attacksToday;
+  document.getElementById('stBlocked').textContent = j.stats.blocked;
+  document.getElementById('stHash').textContent = j.stats.baseline;
+  const d = document.getElementById('stDeface');
+  d.textContent = j.stats.defaced ? 'DEFACED!' : 'AMAN';
+  d.className = 'text-3xl font-extrabold ' + (j.stats.defaced ? 'text-red-500 animate-pulse' : 'text-emerald-400');
+
+  // sites
+  const box = document.getElementById('siteList'); box.innerHTML = '';
+  lastSites = j.sites;
+  j.sites.forEach(s => {
+    const dot = s.status==='UP' ? '🟢' : (s.status==='ISOLATED' ? '🔴' : '🟡');
+    const cls = s.status==='UP'?'badge-up':(s.status==='ISOLATED'?'badge-attack':'badge-iso');
+    const mkc = s.status==='UP'?'mk-up':(s.status==='ISOLATED'?'mk-iso':'mk-atk');
+    if(!markers[s.id]) markers[s.id] = L.marker([s.lat,s.lng]).addTo(map);
+    markers[s.id].bindPopup(`<b>${s.name}</b> ${dot}<br>IP lokal: <span style="font-family:monospace">${s.localIp||'-'}</span><br>CPU: <b>${s.cpu??'-'}%</b> • RAM: <b>${s.ram??'-'}%</b><br>WAF: <b>${s.waf?'AKTIF':'NONAKTIF'}</b><br>Status: <b>${s.status}</b>`);
+    markers[s.id].setIcon(L.divIcon({ className: '', html: `<div class="mk ${mkc}"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] }));
+    box.innerHTML += `<div class="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-700 text-sm ${s.status !== 'UP' ? 'row-atk' : ''}" onclick="markers['${s.id}'].openPopup()" style="cursor:pointer">
+      <span>${dot} ${s.name} <span class="text-[10px] text-slate-500 font-mono">${s.localIp||''} CPU ${s.cpu??'-'}%</span></span>
+      <span class="flex gap-1 items-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold ${cls}">${s.status}</span>
+      ${myRole==='komandan' ? (s.isolated?`<button onclick="restore('${s.id}')" class="text-[11px] px-2 py-0.5 rounded bg-emerald-700">Pulihkan</button>`:`<button onclick="isolate('${s.id}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-700">Isolasi</button>`) : (myRole==='operator' && !s.isolated ? `<button onclick="askIsolate('${s.id}','${s.name}')" class="text-[11px] px-2 py-0.5 rounded bg-amber-800 border border-amber-600">Ajukan</button>` : `<span class="text-[10px] text-slate-500">🔒 Komandan</span>`)}</span></div>`;
+  });
+
+  // sorotan pertempuran: banner + terbang ke sasaran + ikuti korban + busur
+  const hot = j.sites.filter(s => s.status !== 'UP');
+  const banner = document.getElementById('atkBanner');
+  if(hot.length){
+    banner.style.display = 'block';
+    banner.textContent = '⚠ SERANGAN BERLANGSUNG: ' + hot.map(s => `${s.name}${s.hitBy ? ' (' + s.hitBy + ')' : ''}`).join(' • ');
+  } else banner.style.display = 'none';
+  const hotIds = hot.map(s => s.id);
+  hot.forEach(s => {
+    if(!prevAtk.includes(s.id) && markers[s.id]){
+      map.flyTo([s.lat, s.lng], 7, { duration: 1.4 });
+      setTimeout(() => markers[s.id] && markers[s.id].openPopup(), 1500);
+    }
+  });
+  prevAtk = hotIds;
+  const withArc = hot.find(s => s.hitBy && ATK_ORIGIN[s.hitBy]);
+  if(withArc) drawArc(ATK_ORIGIN[withArc.hitBy], withArc.id, ATK_COLOR[withArc.hitBy]);
+  const def = j.sites.find(s => s.defaced) || hot[0];
+  const follow = def ? def.id : 'pussansiad';
+  if(follow !== currentVictim){
+    currentVictim = follow;
+    document.getElementById('victimFrame').src = '/situs-dummy?site=' + follow + '&t=' + Date.now();
+  }
+  const fol = j.sites.find(s => s.id === currentVictim) || j.sites[8];
+  document.getElementById('victimHash').textContent = (fol && fol.live) || '-';
+  const vs2 = document.getElementById('victimState');
+  vs2.textContent = (fol && fol.defaced) ? 'DISERANG — ' + fol.name.toUpperCase() : 'NORMAL — ' + ((fol && fol.name) || '').toUpperCase();
+  vs2.className = (fol && fol.defaced) ? 'text-red-400 font-bold' : 'text-emerald-300';
+
+  // logs
+  const logs = await getJSON('/api/logs?limit=30');
+  const tb = document.getElementById('logBody');
+  if(logs.length){ tb.innerHTML = logs.map(l=>`<tr class="log-row"><td class="py-1.5 pr-2 whitespace-nowrap text-slate-400">${l.time}</td><td><span class="px-2 py-0.5 rounded text-[11px] font-bold ${l.type.includes('Recovery')?'badge-up':'badge-attack'}">${l.type}</span></td><td class="font-mono text-xs">${l.ip}</td><td class="text-xs">${l.detail}</td></tr>`).join('');
+    hist.push(logs.length); hist.shift(); chart.data.datasets[0].data = [...hist]; chart.update('none');
+    logs.slice(0, 4).reverse().forEach(l => {
+      if(l.id > lastLogId){ lastLogId = l.id; defPrint(`[${l.time}] <b>${l.type}</b> ${l.ip} — ${l.detail.slice(0, 90)}`); noteAttack(l); }
+    });
+  }
+  // playbook level otomatis
+  const anyIso = j.sites.some(s => s.isolated);
+  const anyAtk = j.sites.some(s => s.status === 'ATTACK');
+  const lvl = (j.stats.defaced || anyIso) ? 'R' : ((anyAtk || j.stats.blocked > 0 || j.stats.attacksToday > 0) ? 'Y' : 'G');
+  const badge = document.getElementById('sopLevel');
+  badge.textContent = lvl==='R' ? 'MERAH — COMPROMISED' : (lvl==='Y' ? 'KUNING — INSIDEN TERBATAS' : 'HIJAU — NORMAL');
+  badge.className = 'px-4 py-1.5 rounded-lg font-extrabold ' + (lvl==='R' ? 'badge-attack' : (lvl==='Y' ? 'badge-iso' : 'badge-up'));
+  [['sopG','G'],['sopY','Y'],['sopR','R']].forEach(([id, L]) => {
+    const el = document.getElementById(id);
+    const on = (L === lvl);
+    el.classList.toggle('opacity-60', !on);
+    el.style.boxShadow = on ? '0 0 18px rgba(16,185,129,.25)' : 'none';
+  });
+
+  // audit + ioc (khusus personel login)
+  if(myToken){
+    try {
+      const rq = await getJSON('/api/requests?token=' + myToken);
+      const box = document.getElementById('reqList');
+      box.innerHTML = rq.length ? rq.map(r => {
+        const st = r.status === 'PENDING' ? '<b class="text-amber-300">MENUNGGU KEPUTUSAN</b>' : (r.status === 'DISETUJUI' ? '<b class="text-emerald-300">DISETUJUI</b>' : '<b class="text-red-300">DITOLAK</b>');
+        const act = (r.status === 'PENDING' && myRole === 'komandan')
+          ? `<span class="flex gap-1"><button onclick="decideReq('${r.id}','approve')" class="text-[11px] px-2 py-1 rounded bg-emerald-700 font-bold">SETUJUI + ISOLASI</button><button onclick="decideReq('${r.id}','reject')" class="text-[11px] px-2 py-1 rounded bg-red-900 font-bold">TOLAK</button></span>` : '';
+        return `<div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-700">
+          <span><b>${r.id}</b> • ${r.site}<br><span class="text-xs text-slate-400">dari ${r.by} • "${r.reason}" • ${r.time}</span><br>${st}${r.decidedBy ? ` <span class="text-xs text-slate-500">oleh ${r.decidedBy}</span>` : ''}</span>${act}</div>`;
+      }).join('') : '<p class="text-slate-500 text-xs">Belum ada pengajuan eskalasi.</p>';
+    } catch(e){}
+    try {
+      const au = await getJSON('/api/audit?token=' + myToken);
+      document.getElementById('auditBody').innerHTML = au.length
+        ? au.map(a=>`<tr class="log-row"><td class="py-1.5 pr-2 whitespace-nowrap text-slate-400">${a.time}</td><td class="font-bold text-amber-200">${a.actor}</td><td><span class="px-2 py-0.5 rounded text-[11px] font-bold badge-iso">${a.action}</span></td><td class="text-xs">${a.target}</td><td class="text-xs text-slate-400">${a.detail||''}</td></tr>`).join('')
+        : '<tr><td colspan="5" class="py-4 text-center text-slate-500">Belum ada perintah tercatat.</td></tr>';
+    } catch(e){}
+    try {
+      const io = await getJSON('/api/iocs?token=' + myToken);
+      document.getElementById('iocIps').innerHTML = io.ips.length
+        ? io.ips.map(o=>`<div class="flex justify-between gap-1"><span class="font-mono">${o.ip}<br><span class="text-cyan-300">${o.actor||''}</span>${o.vpn?' <b class="text-amber-300">[VPN?]</b>':''}<br><span class="text-slate-400">📍 ${o.geo||''}</span>${o.gmaps?`<br><a href="${o.gmaps}" target="_blank" class="text-sky-300 font-bold">Google Maps ↗</a>`:''}</span><span>${o.blocked?'<b class="text-red-300">DIBLOKIR</b>':'<span class="text-slate-400">terpantau</span>'} ×${o.count}</span></div>`).join('') +
+          ((io.actors||[]).filter(a=>a.quarantined).map(a=>`<div class="mt-1 p-1 rounded bg-red-950/50 border border-red-700"><b>${a.id}</b> diblokir serentak lintas-IP: ${a.ips.join(', ')}</div>`).join(''))
+        : '<p class="text-slate-500">Nihil.</p>';
+      plotFoes(io.actors || []);
+      document.getElementById('iocHash').innerHTML = io.hashes.map(h=>`<div><span class="font-mono">${h.hash}</span><br><b class="${h.status==='BASELINE'?'text-emerald-300':'text-red-300'}">${h.status}</b> — ${h.note}</div>`).join('');
+      document.getElementById('iocPat').innerHTML = io.payloads.length
+        ? io.payloads.map(p=>`<div><b>${p.pattern}</b> ×${p.count}<br><span class="text-slate-500">${p.example}</span></div>`).join('')
+        : '<p class="text-slate-500">Menunggu data.</p>';
+    } catch(e){}
+  }
+  const honey = logs.filter(l => l.type === 'Honeypot').slice(0, 8);
+  if(honey.length) document.getElementById('honeyFeed').innerHTML = honey.map(l=>`[${l.time}] <b>${l.ip}</b> — ${l.detail.slice(0, 100)}`).join('<br>');
+  try {
+    const ms = await getJSON('/api/mesh/status');
+    document.getElementById('meshNode').textContent = ms.nodeId;
+    document.getElementById('meshOutbox').textContent = ms.outbox;
+    document.getElementById('meshSync').textContent = ms.lastSync || 'belum pernah';
+    document.getElementById('meshMode').textContent = ms.uplinkUp ? 'TERSAMBUNG' : 'MANDIRI';
+    const mb = document.getElementById('meshBadge');
+    mb.textContent = ms.uplinkUp ? '● UPLINK SATELIT AKTIF' : '● MODE MANDIRI TAKTIS';
+    mb.className = 'px-3 py-1.5 rounded-lg font-bold text-sm ' + (ms.uplinkUp ? 'badge-up' : 'badge-iso');
+  } catch(e){}
+  setConn(true);
+  } catch(e){ setConn(false, e.message); }
+}
+setInterval(refresh, 3000); checkMe(); refresh();
+
+function rangeMsg(html){ document.getElementById('rangeOut').innerHTML = `<div class="p-2 rounded-lg bg-slate-900/80 border border-slate-700">${html}</div>`; }
+let lastScenario = 'S-00';
+let lastAutoAI = 0;
+// Sisi biru tidak melancarkan serangan — ia MEREAKSI yang terlihat di log.
+// Dipanggil untuk tiap baris log baru hasil polling.
+function noteAttack(l){
+  const atk = ['Defacement', 'SQLi', 'XSS', 'Traversal', 'Upload', 'DDoS', 'Honeypot', 'BruteForce', 'Scan', 'Intel', 'Sesi', 'Auth'].includes(l.type);
+  if(!atk) return;
+  atkPrint(`<span class="text-slate-500">[intelijen]</span> kontak <b>${l.type}</b> dari ${l.ip} — ${l.detail.slice(0, 80)}`);
+  if(l.type === 'Defacement') victimWatch();
+  const now = Date.now();
+  if(now - lastAutoAI > 90000){
+    lastAutoAI = now;
+    const m = l.detail.match(/\[(S-0\d)\]/);
+    const sc = m ? m[1] : (l.type === 'Defacement' ? 'S-01' : (l.type === 'Honeypot' ? 'S-04' : (l.type === 'DDoS' ? 'S-03' : (l.type === 'BruteForce' ? 'S-05' : (l.type === 'Scan' ? 'S-06' : (l.type === 'Upload' ? 'S-07' : 'S-02'))))));
+    lastScenario = sc;
+    setTimeout(() => { askAnalyst(sc); askAdvisor(sc); }, l.type === 'Defacement' ? 17000 : 4000);
+  }
+}
+function atkPrint(html){
+  const t = document.getElementById('atkTerm');
+  t.innerHTML += html + '<br>'; t.scrollTop = t.scrollHeight;
+}
+function defPrint(html){
+  const t = document.getElementById('defFeed');
+  t.innerHTML += html + '<br>'; t.scrollTop = t.scrollHeight;
+  const lines = t.innerHTML.split('<br>');
+  if(lines.length > 60) t.innerHTML = lines.slice(-60).join('<br>');
+}
+async function askAnalyst(scenario){
+  const box = document.getElementById('aiOut');
+  box.innerHTML = '<span class="text-slate-400">Analis AI membaca medan laga…</span>';
+  try {
+    const j = await getJSON('/api/ai-analyst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario})});
+    document.getElementById('aiEngine').textContent = '• ' + (j.engine || '');
+    const full = `<b>LAPORAN MEDAN LAGA ${scenario}</b><br>${j.narasi}<br><br><b>Profil pelaku:</b> ${j.aktor}<br><b>Rekomendasi:</b><br>• ` + (j.rekomendasi||[]).join('<br>• ');
+    box.innerHTML = ''; let i = 0;
+    const timer = setInterval(() => { box.innerHTML = full.slice(0, i += 6); if(i >= full.length) clearInterval(timer); }, 12);
+  } catch(e){ box.textContent = 'Analis AI tidak terjangkau. Periksa koneksi Groq.'; }
+}
+async function askAdvisor(scenario){
+  const box = document.getElementById('advisorOut');
+  box.innerHTML = '<span class="text-slate-400">Penasihat AI membaca log mentah…</span>';
+  try {
+    const j = await getJSON('/api/ai-advisor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario})});
+    document.getElementById('advisorEngine').textContent = '• ' + (j.engine || '');
+    box.innerHTML = `<b>${j.ringkasan||''}</b><br><br>` + (j.perintah||[]).map((p,i)=>`PERINTAH ${i+1} [${p.tenggat||'-'}] → ${p.aksi} <span class="text-slate-400">(${p.target||''})</span>`).join('<br>') + `<br><br><b>Eskalasi:</b> ${j.eskalasi||'-'}`;
+  } catch(e){ box.textContent = 'Penasihat AI tidak terjangkau.'; }
+}
+async function meshUplink(up){
+  try { const j = await getJSON('/api/mesh/uplink',{method:'POST',headers:authH(),body:JSON.stringify({up})}); rangeMsg(up ? `UPLINK PULIH — ${j.synced} paket tersinkron ke Kartika CSIRT.` : 'UPLINK PUTUS — node beralih ke mode mandiri taktis. Peristiwa antre lokal.'); }
+  catch(e){ showLogin(true); rangeMsg('Perintah mesh ditolak (' + e.message + '). Otoritas Komandan diperlukan.'); }
+  refresh();
+}
+async function meshSync(){
+  try { const j = await getJSON('/api/mesh/sync',{method:'POST',headers:authH()}); rangeMsg(`SINKRON MANUAL — ${j.synced} paket terkirim ke Kartika CSIRT.`); }
+  catch(e){ rangeMsg('Sinkron gagal (' + e.message + ').'); }
+  refresh();
+}
+function victimWatch(){
+  if(victimWatch._on) return;
+  victimWatch._on = true;
+  let n = 0;
+  const timer = setInterval(() => {
+    document.getElementById('victimFrame').src = '/situs-dummy?t=' + Date.now();
+    if(++n >= 9){ clearInterval(timer); victimWatch._on = false; }
+  }, 2000);
+}
+async function sim(k){
+  try {
+    const j = await getJSON('/api/simulate/'+k,{method:'POST',headers:authH()});
+  if(k==='deface'){ lastScenario='S-01'; drawArc(ATK_ORIGIN['S-01'], ATK_TARGET['S-01'], ATK_COLOR['S-01']); rangeMsg(`<b>S-01 DILUNCURKAN.</b> ${j.msg||''} Pantau peta, badge DEFACED, dan log [T1491] + Recovery.`);
+    atkPrint(`root@red-team:~# deface --target portal-pussansiad.tniad.mil.id<br><span class="text-slate-500">> menyuntikkan muatan perusak tampilan…</span><br><span class="text-red-400">> HTTP 200 — konten berubah di luar baseline!</span>`);
+    defPrint(`[shield] …menunggu monitor integritas (siklus 5 dtk)…`);
+    victimWatch(); setTimeout(() => { askAnalyst('S-01'); askAdvisor('S-01'); }, 17000); }
+  if(k==='sqli'){ lastScenario='S-02'; drawArc(ATK_ORIGIN['S-02'], ATK_TARGET['S-02'], ATK_COLOR['S-02']); rangeMsg(`<b>S-02 — HASIL PENILAIAN MESIN</b> (penyerang ${j.attacker}):<br>` + (j.verdicts||[]).map(v=>`${v.allowed?'✅ LOLOS':'⛔ DITOLAK'} [${v.reason}] <span class="font-mono">${v.payload}</span>`).join('<br>'));
+    atkPrint(`root@red-team:~# inject --vector sqli+xss+traversal --target ${j.attacker}<br>` + (j.verdicts||[]).map(v=>`<span class="text-slate-500">> GET ${v.payload}</span><br>&lt; HTTP 403 — <b>${v.reason}</b>, muatan gugur`).join('<br>'));
+    (j.verdicts||[]).forEach(v=>defPrint(`[waf] ${v.reason} — muatan dari ${j.attacker} DITOLAK`));
+    setTimeout(() => { askAnalyst('S-02'); askAdvisor('S-02'); }, 2500); }
+  if(k==='ddos'){ lastScenario='S-03'; drawArc(ATK_ORIGIN['S-03'], ATK_TARGET['S-03'], ATK_COLOR['S-03']); rangeMsg(`<b>S-03 — HASIL PENILAIAN MESIN.</b> ${j.requests} request dari ${j.attacker}. Limiter memutus pada request ke-<b>${j.blockedAtRequest}</b> (ambang 60/menit). IP kini diblokir — cek daftar IP diblokir dan log [T1498].`);
+    atkPrint(`root@red-team:~# flood --rate 75/10s --target portal<br><span class="text-slate-500">> membanjiri…</span><br><span class="text-red-400">&lt; request #${j.blockedAtRequest}: HTTP 429 — IP DIBLOKIR, banjir terhenti</span>`);
+    defPrint(`[limiter] ambang 60/mnt terlampaui — ${j.attacker} DIBLOKIR pada request #${j.blockedAtRequest}`);
+    setTimeout(() => { askAnalyst('S-03'); askAdvisor('S-03'); }, 2500); }
+  if(k==='honeypot'){ lastScenario='S-04'; drawArc(ATK_ORIGIN['S-04'], ATK_TARGET['S-04'], ATK_COLOR['S-04']); rangeMsg(`<b>S-04 — PERANGKAP MEMAKAN KORBAN.</b> Pemindai ${j.attacker} menyentuh ${(j.trail||[]).length} umpan — sidik direkam, IP <b>KUNCI PERMANEN</b>. Cek kartu Honeypot + IOC.`);
+    atkPrint(`root@red-team:~# recon --target portal<br>` + (j.trail||[]).map(t=>`<span class="text-slate-500">> GET ${t.probe}</span><br><span class="text-red-400">&lt; TRIPWIRE — ${t.verdict}, akses dikunci</span>`).join('<br>') + `<br><span class="text-slate-500">> POST /login-bais u=admin p=***</span><br><span class="text-red-400">&lt; kredensial ditangkap, "password salah"</span>`);
+    defPrint(`[honeypot] ${j.attacker} masuk perangkap — KUNCI PERMANEN + kredensial disita`);
+    setTimeout(() => { askAnalyst('S-04'); askAdvisor('S-04'); }, 2500); }
+  } catch(e){
+    const msg = String(e.message || '');
+    if(msg.includes('401')){ showLogin(true); rangeMsg('Sesi diperlukan (' + msg + ').'); }
+    else rangeMsg('Serangan gagal diluncurkan (' + msg + '). Coba lagi.');
+  }
+  refresh();
+}
+async function resetAll(){
+  try { await getJSON('/api/simulate/reset',{method:'POST',headers:authH()}); }
+  catch(e){ showLogin(true); rangeMsg('Reset ditolak (' + e.message + '). Hanya Komandan.'); }
+  refresh();
+}
+async function isolate(id){
+  try { await getJSON('/api/isolate',{method:'POST',headers:authH(),body:JSON.stringify({id})}); }
+  catch(e){ showLogin(true); return alert('Hanya Komandan yang bisa isolasi (' + e.message + ')'); }
+  refresh();
+}
+async function askIsolate(id, name){
+  const reason = prompt(`Eskalasi ke Komandan — alasan isolasi ${name}:`, 'Aktivitas mencurigakan terpantau, mohon putus segmen.');
+  if(reason === null) return;
+  try {
+    await getJSON('/api/requests',{method:'POST',headers:authH(),body:JSON.stringify({siteId: id, reason})});
+    rangeMsg(`Pengajuan isolasi <b>${name}</b> terkirim. Menunggu keputusan Komandan di kartu Rantai Komando.`);
+  } catch(e){ alert('Gagal mengajukan (' + e.message + ')'); }
+  refresh();
+}
+async function decideReq(id, verdict){
+  try { await getJSON('/api/requests/' + id + '/' + verdict,{method:'POST',headers:authH()}); }
+  catch(e){ return alert('Gagal memproses (' + e.message + ')'); }
+  refresh();
+}
+async function restore(id){
+  try { await getJSON('/api/restore',{method:'POST',headers:authH(),body:JSON.stringify({id})}); }
+  catch(e){ showLogin(true); return alert('Hanya Komandan yang bisa pulihkan (' + e.message + ')'); }
+  refresh();
+}
+async function cekHoaks(){
+  const t = document.getElementById('hoaksInput').value;
+  if(!t) return alert('Tempel teks dulu');
+  const r = await fetch('/api/analyze-hoaks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
+  let j;
+  try { j = await r.json(); }
+  catch(e){ return document.getElementById('hoaksOut').textContent = 'Analisa ditolak (' + r.status + '). Coba lagi.'; }
+  document.getElementById('hoaksOut').innerHTML = `<div class="p-2 rounded-lg ${j.keywords.length?'bg-red-900/40 border border-red-600':'bg-emerald-900/40 border border-emerald-600'}"><b>${j.verdict}</b> (skor ${j.score})<br><span class="text-xs">Kata kunci: ${j.keywords.join(', ')||'-'}<br>${j.saran}<br><span class="text-slate-500">Engine: ${j.engine||'?'}${j.fallback?' • fallback offline (Groq tidak terjangkau)':''}</span></span></div>`;
+}
+</script>
+</body>
+</html>
