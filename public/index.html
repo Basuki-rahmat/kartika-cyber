@@ -57,6 +57,7 @@ body{background:#070d12;color:#e2e8f0;font-family:'Segoe UI',system-ui}
 <span id="roleBadge" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 font-bold">🔓 BELUM LOGIN</span>
 <a href="/situs-dummy" target="_blank" class="btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700">🎯 Situs Dummy</a>
 <a href="/redteam.html" target="_blank" class="btn px-3 py-1.5 rounded-lg bg-red-900 border border-red-600 hover:bg-red-800 font-bold">☠️ Konsol Merah</a>
+<button id="alarmBtn" onclick="toggleAlarm()" class="btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 font-bold">🔇 ALARM</button>
 <button id="loginBtn" onclick="showLogin(true)" class="btn px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold">Login</button>
 <button id="logoutBtn" onclick="logout()" class="btn px-3 py-1.5 rounded-lg bg-red-800 hover:bg-red-700 font-bold hidden">Logout</button>
 </div>
@@ -548,6 +549,14 @@ async function refresh(){
     mb.textContent = ms.uplinkUp ? '● UPLINK SATELIT AKTIF' : '● MODE MANDIRI TAKTIS';
     mb.className = 'px-3 py-1.5 rounded-lg font-bold text-sm ' + (ms.uplinkUp ? 'badge-up' : 'badge-iso');
   } catch(e){}
+  const allSafe = j.sites.every(s => s.status === 'UP') && !j.stats.defaced;
+  if(allSafe && alarmOn){
+    alarmOn = false;
+    stopAlarmSound();
+    const btn = document.getElementById('alarmBtn');
+    if(btn){ btn.textContent = '🔇 ALARM'; btn.className = 'btn px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 font-bold'; }
+    defPrint('[shield] ✅ SITUASI AMAN — semua situs UP, alarm dinonaktifkan otomatis.');
+  }
   setConn(true);
   } catch(e){ setConn(false, e.message); }
 }
@@ -561,8 +570,18 @@ let lastAutoAI = 0;
 function noteAttack(l){
   const atk = ['Defacement', 'SQLi', 'XSS', 'Traversal', 'Upload', 'DDoS', 'Honeypot', 'BruteForce', 'Scan', 'Intel', 'Sesi', 'Auth'].includes(l.type);
   if(!atk) return;
+  atkPrint(`<span class="text-slate-500">[alarm] 🚨 SERANGAN TERDETEKSI — ${l.type} dari ${l.ip}</span>`);
   atkPrint(`<span class="text-slate-500">[intelijen]</span> kontak <b>${l.type}</b> dari ${l.ip} — ${l.detail.slice(0, 80)}`);
+  if(!alarmOn){ alarmOn = true; const btn = document.getElementById('alarmBtn'); if(btn){ btn.textContent = '🔊 ALARM ON'; btn.className = 'btn px-3 py-1.5 rounded-lg font-bold bg-red-700 border border-red-500'; } }
+  startAlarmSound();
   if(l.type === 'Defacement') victimWatch();
+  if(Date.now() - lastAutoAI > 90000){
+    lastAutoAI = now;
+    const m = l.detail.match(/\[(S-0\d)\]/);
+    const sc = m ? m[1] : (l.type === 'Defacement' ? 'S-01' : (l.type === 'Honeypot' ? 'S-04' : (l.type === 'DDoS' ? 'S-03' : (l.type === 'BruteForce' ? 'S-05' : (l.type === 'Scan' ? 'S-06' : (l.type === 'Upload' ? 'S-07' : 'S-02'))))));
+    lastScenario = sc;
+    setTimeout(() => { askAnalyst(sc); askAdvisor(sc); }, l.type === 'Defacement' ? 17000 : 4000);
+  }
   const now = Date.now();
   if(now - lastAutoAI > 90000){
     lastAutoAI = now;
@@ -572,6 +591,45 @@ function noteAttack(l){
     setTimeout(() => { askAnalyst(sc); askAdvisor(sc); }, l.type === 'Defacement' ? 17000 : 4000);
   }
 }
+let alarmOn = false;
+let alarmAudio = null;
+let alarmFlash = null;
+
+function toggleAlarm(){
+  alarmOn = !alarmOn;
+  const btn = document.getElementById('alarmBtn');
+  btn.textContent = alarmOn ? '🔊 ALARM ON' : '🔇 ALARM';
+  btn.className = 'btn px-3 py-1.5 rounded-lg font-bold ' + (alarmOn ? 'bg-red-700 border border-red-500 hover:bg-red-600' : 'bg-slate-800 border border-slate-600 hover:bg-slate-700');
+  if(!alarmOn) stopAlarmSound();
+}
+
+function startAlarmSound(){
+  if(!alarmOn) return;
+  try {
+    stopAlarmSound();
+    if(!alarmAudio){
+      alarmAudio = new Audio('mixkit-emergency-alert-alarm-1007.webm');
+      alarmAudio.loop = true;
+    }
+    alarmAudio.currentTime = 0;
+    const p = alarmAudio.play();
+    if(p) p.catch(() => {
+      const kick = () => { alarmAudio.play().catch(()=>{}); document.removeEventListener('click', kick); document.removeEventListener('keydown', kick); };
+      document.addEventListener('click', kick);
+      document.addEventListener('keydown', kick);
+    });
+    alarmFlash = setInterval(() => {
+      document.body.style.boxShadow = document.body.style.boxShadow ? '' : 'inset 0 0 80px rgba(239,68,68,0.6)';
+    }, 500);
+  } catch(e){}
+}
+
+function stopAlarmSound(){
+  if(alarmFlash){ clearInterval(alarmFlash); alarmFlash = null; }
+  document.body.style.boxShadow = '';
+  if(alarmAudio){ alarmAudio.pause(); alarmAudio.currentTime = 0; }
+}
+
 function atkPrint(html){
   const t = document.getElementById('atkTerm');
   t.innerHTML += html + '<br>'; t.scrollTop = t.scrollHeight;

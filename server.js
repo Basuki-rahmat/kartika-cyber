@@ -517,6 +517,20 @@ app.get('/admin-backup', (req, res) => {
   res.status(200).send('<pre style="background:#000;color:#4ade80;padding:24px">phpMyAdmin 4.8.1 — backup node\n#2002 - No such file or directory — retrying…</pre>');
 });
 
+let alarmArmed = true;
+let lastAlarmAt = null;
+let alarmLog = [];
+
+app.get('/api/alarm', (req, res) => {
+  res.json({ armed: alarmArmed, lastAlarmAt, recent: alarmLog.slice(-10) });
+});
+
+app.post('/api/alarm/toggle', (req, res) => {
+  alarmArmed = !alarmArmed;
+  addAudit('KONSOL KOMANDAN', alarmArmed ? 'ALARM AKTIF' : 'ALARM NONAKTIF', '-', 'Alarm ' + (alarmArmed ? 'diaktifkan' : 'dinonaktifkan'));
+  res.json({ ok: true, armed: alarmArmed });
+});
+
 app.get('/api/status', (req, res) => {
   const up = sites.filter(s => s.status === 'UP').length;
   const minute = new Date().getMinutes();

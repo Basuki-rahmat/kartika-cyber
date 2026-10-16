@@ -6,24 +6,69 @@
 
 ## Daftar Isi
 
-1. [Ringkasan](#ringkasan)
-2. [Arsitektur](#arsitektur)
-3. [Fitur Utama](#fitur-utama)
-4. [Persyaratan Sistem](#persyaratan-sistem)
-5. [Instalasi](#instalasi)
-6. [Menjalankan Server](#menjalankan-server)
-7. [Kredensial & Peran](#kredensial--peran)
-8. [Halaman & Rute](#halaman--rute)
-9. [API Endpoint](#api-endpoint)
-10. [Skenario Latihan (Red Team)](#skenario-latihan-red-team)
-11. [Konfigurasi Environment](#konfigurasi-environment)
-12. [Struktur Proyek](#struktur-proyek)
-13. [Keamanan & Batasan](#keamanan--batasan)
-14. [Troubleshooting](#troubleshooting)
+1. [Latar Belakang Masalah](#latar-belakang-masalah)
+2. [Dampak & Kelayakan (Impact & Feasibility)](#dampak--kelayakan-impact--feasibility)
+3. [Ringkasan Teknis](#ringkasan-teknis)
+4. [Arsitektur](#arsitektur)
+5. [Fitur Utama](#fitur-utama)
+6. [Persyaratan Sistem](#persyaratan-sistem)
+7. [Instalasi & Menjalankan](#instalasi--menjalankan)
+8. [Kredensial & Peran](#kredensial--peran)
+9. [Halaman & Rute](#halaman--rute)
+10. [API Endpoint](#api-endpoint)
+11. [Skenario Latihan (Red Team)](#skenario-latihan-red-team)
+12. [Konfigurasi Environment](#konfigurasi-environment)
+13. [Struktur Proyek](#struktur-proyek)
+14. [Keamanan & Batasan](#keamanan--batasan)
+15. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Ringkasan
+## Latar Belakang Masalah
+
+Portal digital TNI AD menghadapi ancaman siber yang terus berkembang:
+
+- **Defacement situs** — kerusakan citra institusi di mata publik
+- **Injeksi SQL/XSS** — eksploitasi kerentanan aplikasi web
+- **DDoS** — gangguan layanan publik
+- **Kebocoran data personel** — pencurian informasi terbatas
+- **Hoaks/disinformasi** — serangan psikologis yang menarget prajurit
+
+Seluruh 10 Kodam + Pussansiad + Kartika CSIRT memerlukan pertahanan yang terpadu, bukan parsial.
+
+---
+
+## Dampak & Kelayakan (Impact & Feasibility)
+
+### Dampak Nyata
+| Aspek | Dampak |
+|---|---|
+| **Cakupan** | 10 Kodam + Pussansiad + Kartika CSIRT dalam 1 platform |
+| **Respons** | Deteksi < 5 detik, auto-rollback 10 detik |
+| **Biaya** | Rp 0 — open source, tanpa lisensi, tanpa API key wajib |
+| **SDM** | Cukup 1 operator + 1 komandan, tanpa keahlian khusus |
+| **Regulasi** | Sesuai Perpres 82/2022 (IIV) |
+
+### Kelayakan Implementasi
+| Kriteria | Status |
+|---|---|
+| **Perangkat** | Low-spec (i7/16GB/4GB) — cocok untuk Kodam |
+| **Instalasi** | 1 perintah: `npm install && npm start` |
+| **Dependensi** | 4 package npm, tanpa database, tanpa Docker |
+| **Jaringan** | Single port 3000, tanpa firewall kompleks |
+| **Offline** | GeoIP & peta provinsi jalan tanpa internet |
+| **Maintenance** | Zero — stateless, restart = reset |
+
+### Keunggulan Kompetitif
+- **Mesin deteksi tunggal** — skenario uji dievaluasi mesin yang sama dengan trafik nyata
+- **Rantai komando** — pemisahan tugas operator/komandan sesuai SOP militer
+- **Mesh taktis** — store-and-forward saat uplink putus
+- **Jejak audit** — akuntabilitas penuh setiap perintah
+- **AI analysis** — integrasi Groq untuk analisis hoaks & laporan
+
+---
+
+## Ringkasan Teknis
 
 GARUDA SHIELD LITE adalah platform latihan pertahanan siber (blue team) yang mensimulasikan perlindungan terhadap portal-portal TNI AD. Sistem ini menggabungkan:
 
