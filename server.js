@@ -51,11 +51,21 @@ sites.forEach(s => webInit(s.id));
 
 function sha256(s) { return crypto.createHash('sha256').update(s).digest('hex'); }
 function nowWIB() { return new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }); }
+const SLA_MIN = { CRITICAL: 15, HIGH: 30, MEDIUM: 60, LOW: 120 };
+
 function addLog(type, ip, detail, siteId = 'pussansiad') {
   const e = { id: Date.now() + Math.random(), time: nowWIB(), type, ip, detail, siteId };
   logs.unshift(e);
   if (logs.length > 200) logs.pop();
   if (!uplinkUp && outbox.length < 500) outbox.push({ kind: 'log', at: e.time, data: e });
+  const atkTypes = ['Defacement', 'SQLi', 'XSS', 'Traversal', 'Upload', 'DDoS', 'Honeypot', 'BruteForce', 'Scan'];
+  if (atkTypes.includes(type) && typeof io !== 'undefined') {
+    const pri = type === 'Defacement' ? 'CRITICAL' : (type === 'DDoS' ? 'HIGH' : (type === 'Honeypot' ? 'HIGH' : 'MEDIUM'));
+    const inc = { id: 'INC-' + String(++incidentSeq).padStart(3, '0'), title: type + ' dari ' + ip, desc: detail.slice(0, 120), priority: pri, status: 'OPEN', createdBy: 'SISTEM (otomatis)', assignedTo: null, actions: [], handover: '', slaDeadline: new Date(Date.now() + SLA_MIN[pri] * 60000).toISOString(), createdAt: nowWIB(), updatedAt: nowWIB() };
+    incidents.unshift(inc);
+    io.emit('incident:new', inc);
+    io.emit('alarm:attack', { type, ip, incident: inc.id });
+  }
 }
 // Jejak akuntabilitas militer: setiap perintah tercatat siapa–apa–kapan.
 function addAudit(actor, action, target, detail) {
@@ -1029,4 +1039,80 @@ app.use((req, res) => {
   res.status(404).send('Tidak ditemukan.');
 });
 
-app.listen(PORT, () => console.log(`GARUDA SHIELD LITE jalan di http://localhost:${PORT}`));
+const http = require('http');
+const { Server } = require('socket.io');
+const server = http.createServer(app);
+const io = new Server(server);
+
+let incidents = [];
+let incidentSeq = 0;
+let warRoomUsers = new Map();
+
+io.on('connection', (socket) => {
+  socket.emit('init', { incidents, users: [...warRoomUsers.values()] });
+  socket.on('join', (name) => {
+    const u = { id: socket.id, name, joinedAt: nowWIB() };
+    warRoomUsers.set(socket.id, u);
+    io.emit('users', [...warRoomUsers.values()]);
+    addLog('Warpad', '-', `[WARROM] ${name} bergabung ke War Room`);
+  });
+  socket.on('incident:create', (data) => {
+    const inc = { id: 'INC-' + String(++incidentSeq).padStart(3, '0'), title: data.title, desc: data.desc || '', priority: data.priority || 'MEDIUM', status: 'OPEN', createdBy: data.createdBy || '-', assignedTo: null, actions: [], handover: '', slaDeadline: null, createdAt: nowWIB(), updatedAt: nowWIB() };
+    incidents.unshift(inc);
+    io.emit('incident:new', inc);
+    addAudit('WAR ROM', 'INSIDEN BARU', inc.title, `${inc.priority} — ${inc.desc}`);
+  });
+  socket.on('incident:claim', (data) => {
+    const inc = incidents.find(x => x.id === data.id);
+    if (inc) { inc.assignedTo = data.user; inc.status = 'IN_PROGRESS'; inc.updatedAt = nowWIB(); inc.actions.push({ by: data.user, action: 'Mengklaim insiden', time: nowWIB() }); io.emit('incident:update', inc); }
+  });
+  socket.on('incident:action', (data) => {
+    const inc = incidents.find(x => x.id === data.id);
+    if (inc) { inc.actions.push({ by: data.user, action: data.action, time: nowWIB() }); inc.updatedAt = nowWIB(); io.emit('incident:update', inc); }
+  });
+  socket.on('incident:handover', (data) => {
+    const inc = incidents.find(x => x.id === data.id);
+    if (inc) { inc.handover = data.notes; inc.updatedAt = nowWIB(); io.emit('incident:update', inc); }
+  });
+  socket.on('incident:escalate', (data) => {
+    const inc = incidents.find(x => x.id === data.id);
+    if (inc) { const order = ['LOW','MEDIUM','HIGH','CRITICAL']; const i = order.indexOf(inc.priority); if(i < order.length-1){ inc.priority = order[i+1]; inc.actions.push({ by: data.user, action: 'Eskalasi ke ' + inc.priority, time: nowWIB() }); inc.updatedAt = nowWIB(); io.emit('incident:update', inc); } }
+  });
+  socket.on('incident:move', (data) => {
+    const inc = incidents.find(x => x.id === data.id);
+    if (inc) { inc.status = data.status; inc.updatedAt = nowWIB(); if(data.status === 'RESOLVED'){ inc.actions.push({ by: '-', action: 'Insiden diresolusikan', time: nowWIB() }); } io.emit('incident:update', inc); }
+  });
+  socket.on('incident:delete', (data) => {
+    incidents = incidents.filter(x => x.id !== data.id);
+    io.emit('incident:remove', data.id);
+  });
+  socket.on('chat', (msg) => {
+    io.emit('chat', { id: Date.now(), user: msg.user, text: msg.text, time: nowWIB(), role: msg.role || '-' });
+  });
+  socket.on('disconnect', () => {
+    const u = warRoomUsers.get(socket.id);
+    if (u) { warRoomUsers.delete(socket.id); io.emit('users', [...warRoomUsers.values()]); }
+  });
+});
+
+app.get('/api/incidents', (req, res) => res.json(incidents.slice(0, 30)));
+app.post('/api/incidents', (req, res) => {
+  const inc = { id: 'INC-' + String(++incidentSeq).padStart(3, '0'), title: req.body.title, desc: req.body.desc || '', priority: req.body.priority || 'MEDIUM', status: 'OPEN', createdBy: req.body.createdBy || 'API', createdAt: nowWIB(), updatedAt: nowWIB() };
+  incidents.unshift(inc);
+  io.emit('incident:new', inc);
+  res.json({ ok: true, inc });
+});
+app.post('/api/incidents/:id/move', (req, res) => {
+  const inc = incidents.find(x => x.id === req.params.id);
+  if (!inc) return res.status(404).json({ error: 'not found' });
+  inc.status = req.body.status; inc.updatedAt = nowWIB();
+  io.emit('incident:update', inc);
+  res.json({ ok: true });
+});
+app.delete('/api/incidents/:id', (req, res) => {
+  incidents = incidents.filter(x => x.id !== req.params.id);
+  io.emit('incident:remove', req.params.id);
+  res.json({ ok: true });
+});
+
+server.listen(PORT, () => console.log(`GARUDA SHIELD LITE + WAR ROOM jalan di http://localhost:${PORT}`));
