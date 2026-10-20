@@ -169,8 +169,66 @@
       </ol>
     </section>
 
+    <% if ((laporan.networkSites || []).length) { %>
     <section>
-      <h2>F. Jejak audit penanganan</h2>
+      <h2>F. Konteks jaringan terpantau (semua situs Kodam)</h2>
+      <p style="font-size:12px; margin:0 0 10px">
+        Dari <strong><%= (laporan.networkSites || []).length %></strong> endpoint dummy yang terpantau: <strong style="color:#4b7a56"><%= (laporan.networkSites || []).filter(s => s.status === 'online').length %></strong> normal,
+        <strong style="color:#9d6b1f"><%= (laporan.networkSites || []).filter(s => s.status === 'warning').length %></strong> latensi tinggi,
+        <strong style="color:#a13b34"><%= (laporan.networkSites || []).filter(s => s.status === 'offline').length %></strong> tidak merespons,
+        <strong><%= (laporan.networkSites || []).filter(s => s.status === 'maintenance').length %></strong> pemeliharaan.
+        Target insiden ini ditandai <span style="border:1px solid #9d6b1f; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#fdf6ea; color:#8a5013">TARGET</span>.
+      </p>
+      <table>
+        <thead>
+          <tr><th style="width:34px">No</th><th style="width:96px">Kode</th><th>Situs</th><th style="width:100px">Status</th><th style="width:70px">Latensi</th><th style="width:78px">Uptime</th><th style="width:82px">Tanda</th></tr>
+        </thead>
+        <tbody>
+          <% (laporan.networkSites || []).forEach((site, index) => { %>
+          <tr<%= site.wasTarget ? ' style="background:#fdf6ea"' : '' %>>
+            <td><%= index + 1 %></td>
+            <td><code style="font-family:Consolas,monospace"><%= site.code %></code></td>
+            <td><%= site.name %> <small style="color:#5f6d66">· <%= site.city %></small></td>
+            <td><strong><%= site.status.toUpperCase() %></strong></td>
+            <td><%= site.latency === null ? '—' : `${site.latency} ms` %></td>
+            <td><%= site.uptime %></td>
+            <td><% if (site.wasTarget) { %><span style="border:1px solid #9d6b1f; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#fdf6ea; color:#8a5013"><%= site.underAttack ? 'TARGET AKTIF' : 'TARGET' %></span><% } else { %>&mdash;<% } %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <p class="note">Status dan metrik di atas adalah nilai sintetis per titik untuk memberi konteks lokasi insiden dalam peta pemantauan nasional.</p>
+    </section>
+    <% } %>
+
+    <section>
+      <h2>G. Riwayat serangan dalam sesi simulasi</h2>
+      <% if ((laporan.incidents || []).length === 0) { %>
+        <p style="font-size:12px">Tidak ada catatan serangan lain.</p>
+      <% } else { %>
+      <table>
+        <thead>
+          <tr><th style="width:34px">No</th><th style="width:140px">Waktu</th><th>Target</th><th>Metode</th><th style="width:64px">Event</th><th style="width:150px">Asal serangan</th><th style="width:96px">Status</th></tr>
+        </thead>
+        <tbody>
+          <% (laporan.incidents || []).forEach((inc, index) => { %>
+          <tr<%= inc.current ? ' style="background:#fdf6ea"' : '' %>>
+            <td><%= index + 1 %></td>
+            <td style="font-size:10.5px"><%= new Date(inc.createdAt).toISOString().replace('T', ' ').slice(0, 19) %> UTC</td>
+            <td><%= inc.site.name %> (<%= inc.site.code %>)</td>
+            <td><%= inc.method.code %> &middot; <%= inc.method.name %></td>
+            <td><%= inc.eventCount %></td>
+            <td style="font-size:10.5px"><%= inc.attacker || '—' %><% if (inc.vpn || inc.tor) { %> <small><%= [inc.vpn ? 'VPN' : '', inc.tor ? 'TOR' : ''].filter(Boolean).join('+') %></small><% } %></td>
+            <td><span class="status-chip"><%= inc.resolved ? 'PULIH' : 'AKTIF' %></span></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </section>
+
+    <section>
+      <h2>H. Jejak audit penanganan</h2>
       <% if (laporan.audit.length === 0) { %>
         <p style="font-size:12px">Belum ada perubahan status alert yang dicatat untuk insiden ini.</p>
       <% } else { %>
@@ -191,7 +249,7 @@
     </section>
 
     <section>
-      <h2>G. Pengesahan</h2>
+      <h2>I. Pengesahan</h2>
       <div class="sign-grid">
         <div class="sign">Disusun oleh<div class="line">Operator demo GARUDA SHIELD</div></div>
         <div class="sign">Disetujui / mencatat oleh<div class="line">Pimpinan satuan (demo)</div></div>

@@ -1,6 +1,6 @@
 :root {
     color-scheme: dark;
-    --bg: #c00000;
+    --bg: #010000;
     --bg-2: #000000;
     --panel: #1a0e10;
     --panel-2: #241316;
@@ -182,4 +182,26 @@ code, kbd { font-family: var(--mono); }
   .action-summary { justify-content: space-between; }
   .action-buttons { display: grid; grid-template-columns: auto 1fr; }
   .btn-launch { justify-content: center; }
+}
+/* Profil asal penyerang */
+.attacker-grid { display: grid; gap: 12px; padding: 16px 18px 18px; }
+.preset-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.attacker-preset { padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg-2); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
+.attacker-preset:hover { border-color: var(--accent); color: var(--ink); }
+.attacker-preset.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.attacker-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius-sm); background: var(--bg-2); }
+.attacker-field { display: grid; gap: 5px; }
+.attacker-field > span { color: var(--faint); font-family: var(--mono); font-size: 7px; letter-spacing: .1em; }
+.attacker-field input { min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg-2); outline: none; color: var(--ink); font-family: var(--mono); font-size: 11px; }
+.attacker-field input:focus { border-color: var(--accent); }
+.attacker-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.attacker-flags { display: flex; align-items: center; gap: 16px; }
+.attacker-flags label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; cursor: pointer; }
+.attacker-flags input { accent-color: var(--accent); }
+.attacker-hint { margin: 0; color: var(--faint); font-size: 10px; font-style: italic; }
+.tag-attacker { border-color: #3d2c17; color: #f0d7a4; background: #2a1d10; }
+
+@media (max-width: 620px) {
+  .attacker-fields { grid-template-columns: 1fr; }
+  .attacker-pair { grid-template-columns: 1fr; }
 }

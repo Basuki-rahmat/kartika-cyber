@@ -108,6 +108,9 @@ code, kbd { font-family: var(--mono); }
 /* Hero */
 .hero { position: relative; overflow: hidden; color: #f3f6ee; background: #16261c; isolation: isolate; }
 .hero-bg { position: absolute; z-index: -1; inset: 0; }
+.hero-banner-mode { background: #0a1220; }
+.hero-banner-mode .hero-inner { padding-top: 26px; }
+.hero-banner-img { display: block; width: 100%; aspect-ratio: 40 / 14; object-fit: cover; }
 .hero-mesh { position: absolute; inset: -20%; background: radial-gradient(50% 60% at 18% 20%, #4e8158cc, transparent 60%), radial-gradient(46% 60% at 82% 12%, #b8a24e88, transparent 62%), radial-gradient(60% 70% at 60% 100%, #1b3324, transparent 70%); animation: drift 18s ease-in-out infinite alternate; }
 @keyframes drift { to { transform: translate3d(3%, -3%, 0) scale(1.06); } }
 .sun-disc { position: absolute; top: 42px; right: 18%; width: 118px; height: 118px; border: 1px solid #f4e5b77a; border-radius: 50%; background: #eacb8650; box-shadow: 0 0 0 20px #eacb8616, 0 0 0 44px #eacb860d; }
@@ -325,4 +328,43 @@ code, kbd { font-family: var(--mono); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .reveal { opacity: 1 !important; transform: none !important; }
+}
+
+/* ===== Mode dampak serangan (situs dirender/ditahan saat insiden aktif) ===== */
+body.under-attack { overflow: hidden; }
+body.under-attack .site-header,
+body.under-attack main,
+body.under-attack .site-footer { filter: grayscale(.85) brightness(.55) blur(2px); pointer-events: none; user-select: none; }
+body.under-attack .demo-ribbon { filter: none; position: relative; z-index: 1400; background: #b91c1c; }
+
+.attack-overlay { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 24px; overflow: auto; }
+.attack-backdrop { position: absolute; inset: 0; background:
+  radial-gradient(1000px 420px at 50% 0%, rgba(185,28,28,.28), transparent 60%),
+  repeating-linear-gradient(0deg, rgba(0,0,0,.32) 0 2px, transparent 2px 5px),
+  rgba(11,13,10,.92); backdrop-filter: blur(3px); }
+.attack-card { position: relative; max-width: 720px; width: 100%; background: #121510; border: 1px solid #7f1d1d; border-radius: 14px; padding: 30px 30px 22px; color: #f3f4f6; box-shadow: 0 30px 80px rgba(0,0,0,.65), 0 0 0 6px rgba(185,28,28,.08); animation: attack-in .5s ease both; }
+@keyframes attack-in { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+.attack-strip { height: 4px; border-radius: 999px; margin-bottom: 18px; background: repeating-linear-gradient(45deg, #ef4444 0 12px, #450a0a 12px 24px); animation: strip-move 1s linear infinite; }
+@keyframes strip-move { to { background-position: 34px 0; } }
+.attack-eyebrow { display: inline-block; font-size: 10px; letter-spacing: .22em; color: #fca5a5; border: 1px solid rgba(252,165,165,.35); border-radius: 4px; padding: 4px 8px; margin-bottom: 14px; }
+.attack-title { margin: 0 0 12px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; letter-spacing: .02em; }
+.attack-title span { display: block; font-size: .45em; font-weight: 600; color: #fca5a5; letter-spacing: .18em; margin-top: 6px; }
+.attack-copy { margin: 0 0 18px; color: #d1d5db; font-size: 13.5px; line-height: 1.65; }
+.attack-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 0 0 18px; }
+.attack-facts > div { border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.03); border-radius: 8px; padding: 10px 12px; }
+.attack-facts dt { font-size: 9.5px; letter-spacing: .18em; color: #9ca3af; }
+.attack-facts dd { margin: 4px 0 0; font-weight: 700; font-size: 13px; color: #fecaca; overflow-wrap: anywhere; }
+.attack-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.attack-note { font-size: 9.5px; letter-spacing: .16em; color: #9ca3af; }
+.attack-link { display: inline-flex; gap: 6px; color: #111; background: #fca5a5; border-radius: 8px; padding: 9px 14px; text-decoration: none; font-weight: 700; font-size: 12.5px; }
+.attack-link:hover { background: #ef4444; color: #fff; }
+
+/* Live pulse: mode dampak yang baru muncul tanpa reload */
+body.attack-enter main { animation: page-glitch .8s steps(6) both; }
+@keyframes page-glitch {
+  0% { filter: hue-rotate(0); }
+  30% { filter: hue-rotate(-40deg) contrast(2); }
+  55% { filter: invert(1); }
+  75% { filter: hue-rotate(200deg) blur(2px); }
+  100% { filter: none; }
 }

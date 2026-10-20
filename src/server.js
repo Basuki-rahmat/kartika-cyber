@@ -30,6 +30,7 @@ const recentAttacks = new Map();
 const analysisCache = new Map();
 let activeIncidentId = null;
 const attackIdPattern = /^[A-Za-z0-9_-]{6,64}$/;
+const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 const groqApiKey = process.env.GROQ_API_KEY || '';
 const groqModel = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const groqEndpoint = 'https://api.groq.com/openai/v1/chat/completions';
@@ -96,10 +97,18 @@ app.get('/', (request, response) => {
 
 app.get('/situs-dummy/:siteId', (request, response) => {
   const site = kodamSites.find((item) => item.id === request.params.siteId);
-  if (!site) return response.status(404).render('dummy-site', { site: null });
+  if (!site) return response.status(404).render('dummy-site', { site: null, attack: null });
+
+  let attack = null;
+  for (const record of recentAttacks.values()) {
+    if (record.resolved || record.site.id !== site.id) continue;
+    if (!attack || record.createdAt > attack.createdAt) attack = record;
+  }
+  if (attack && attack.createdAt < Date.now() - 1000 * 60 * 60) attack = null;
 
   return response.render('dummy-site', {
     site,
+    attack,
     updatedAt: new Intl.DateTimeFormat('id-ID', {
       dateStyle: 'long',
       timeStyle: 'short'
@@ -199,7 +208,10 @@ app.post('/api/serangan', (request, response) => {
     return response.status(400).json({ error: 'Target atau metode serangan tidak dikenali.' });
   }
 
-  const events = method.build(site);
+  const [attackerProfile, attackerError] = buildAttackerProfile(input);
+  if (attackerError) return response.status(400).json({ error: attackerError });
+
+  const events = method.build(site, attackerProfile ? attackerProfile.ip : null);
   try {
     for (const event of events) insertEvent(event);
   } catch (error) {
@@ -239,6 +251,7 @@ app.post('/api/serangan', (request, response) => {
     window: `https://${site.id}.test`,
     eventCount: events.length,
     sources: [...new Set(events.map((event) => event.source).filter(Boolean))],
+    attacker: attackerProfile || null,
     detections,
     responses: method.response
   };
@@ -278,8 +291,66 @@ app.get('/api/serangan/:id', (request, response) => {
   return response.json(record);
 });
 
-function worstSeverity(detections) {
-  return detections.reduce((worst, detection) => (
+function buildAttackerProfile(input) {
+  if (input.attackerIp === undefined && input.attackerLocation === undefined) return [null, null];
+  const location = input.attackerLocation;
+  if (location !== undefined && (typeof location !== 'object' || location === null || Array.isArray(location))) {
+    return [null, 'attackerLocation harus berupa objek profil lokasi.'];
+  }
+  if (location && input.attackerIp === undefined) {
+    return [null, 'attackerLocation hanya boleh dipakai bersama attackerIp.'];
+  }
+  const ip = typeof input.attackerIp === 'string' ? input.attackerIp : '';
+  if (input.attackerIp !== undefined && !ipv4Pattern.test(ip)) {
+    return [null, 'attackerIp harus berupa alamat IPv4 yang valid, mis. 103.22.188.7.'];
+  }
+  const octets = ip.split('.').map(Number);
+  if (octets.length === 4 && octets.some((octet) => octet > 255)) {
+    return [null, 'Setiap oktet attackerIp harus bernilai 0-255.'];
+  }
+  if (location) {
+    if (typeof location.location !== 'string' || !location.location.trim() || location.location.length > 120) {
+      return [null, 'attackerLocation.location wajib berupa teks 1-120 karakter.'];
+    }
+    const lat = Number(location.lat);
+    const lng = Number(location.lng);
+    if (location.lat !== undefined && (!Number.isFinite(lat) || lat < -90 || lat > 90)) {
+      return [null, 'attackerLocation.lat harus berupa angka antara -90 dan 90.'];
+    }
+    if (location.lng !== undefined && (!Number.isFinite(lng) || lng < -180 || lng > 180)) {
+      return [null, 'attackerLocation.lng harus berupa angka antara -180 dan 180.'];
+    }
+    if (location.confidence !== undefined && (!Number.isFinite(Number(location.confidence)) || Number(location.confidence) < 0 || Number(location.confidence) > 100)) {
+      return [null, 'attackerLocation.confidence harus berupa angka 0-100.'];
+    }
+    for (const field of ['provider', 'asn', 'countryCode']) {
+      if (location[field] !== undefined && (typeof location[field] !== 'string' || location[field].length > 120)) {
+        return [null, `attackerLocation.${field} harus berupa teks maksimal 120 karakter.`];
+      }
+    }
+    if (['vpn', 'tor', 'proxy'].some((field) => location[field] !== undefined && typeof location[field] !== 'boolean')) {
+      return [null, 'attackerLocation.vpn, tor, dan proxy harus berupa boolean.'];
+    }
+  }
+  return [{ ip, ...(location ? {
+    location: location.location.trim(),
+    lat: Number.isFinite(location.lat === undefined ? NaN : Number(location.lat)) ? Number(location.lat) : undefined,
+    lng: Number.isFinite(location.lng === undefined ? NaN : Number(location.lng)) ? Number(location.lng) : undefined,
+    provider: typeof location.provider === 'string' ? location.provider.trim().slice(0, 120) : '',
+    asn: typeof location.asn === 'string' ? location.asn.trim().slice(0, 40) : '',
+    countryCode: typeof location.countryCode === 'string' ? location.countryCode.trim().slice(0, 3).toUpperCase() : '',
+    vpn: location.vpn === true,
+    tor: location.tor === true,
+    proxy: location.proxy === true,
+    confidence: Number(location.confidence)
+  } : {}) }, null];
+}
+
+function originOverrides(attack) {
+  return attack && attack.attacker ? { [attack.attacker.ip]: attack.attacker } : {};
+}
+
+function worstSeverity(detections) {  return detections.reduce((worst, detection) => (
     (severityOrder[detection.severity] ?? 9) < (severityOrder[worst] ?? 9) ? detection.severity : worst
   ), 'low');
 }
@@ -366,7 +437,7 @@ app.post('/api/analisis', async (request, response) => {
     return response.json(analysisCache.get(attackId));
   }
 
-  const origins = trackSources(attack.sources);
+  const origins = trackSources(attack.sources, originOverrides(attack));
 
   let analysis;
   let note = '';
@@ -414,11 +485,38 @@ app.get('/laporan/:attackId', (request, response) => {
   const cached = analysisCache.get(attackId);
   const analysis = cached
     ? { model: cached.model, source: cached.source, status: cached.status, recovered: cached.recovered, severity: cached.severity, confidence: cached.confidence, summary: cached.summary, actions: cached.actions, attribution: cached.attribution, origins: cached.origins, note: cached.note }
-    : { ...analyzeLocally(record), model: 'heuristik-lokal', origins: trackSources(record.sources), note: '', attribution: '' };
+    : { ...analyzeLocally(record), model: 'heuristik-lokal', origins: trackSources(record.sources, originOverrides(record)), note: '', attribution: '' };
 
   const alerts = getAlertsByIds(record.detections.map((detection) => detection.id));
   const audit = getAuditByAlertIds(alerts.map((alert) => alert.id));
   const reportCode = `LPR/${new Date().toISOString().slice(0, 10).replaceAll('-', '')}/${attackId.slice(0, 8).toUpperCase()}`;
+
+  const networkSites = kodamSites.map((site) => ({
+    id: site.id,
+    code: site.code,
+    name: site.name,
+    city: site.city,
+    status: site.status,
+    latency: site.latency,
+    uptime: site.uptime,
+    underAttack: site.id === record.site.id && !record.resolved,
+    wasTarget: site.id === record.site.id
+  }));
+  const incidents = [...recentAttacks.values()]
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((entry) => ({
+      id: entry.id,
+      createdAt: entry.createdAt,
+      site: entry.site,
+      method: entry.method,
+      eventCount: entry.eventCount,
+      resolved: entry.resolved,
+      current: entry.id === attackId,
+      attacker: entry.attacker ? (entry.attacker.location || entry.attacker.ip || '') : '',
+      provider: entry.attacker ? entry.attacker.provider : '',
+      vpn: Boolean(entry.attacker && entry.attacker.vpn),
+      tor: Boolean(entry.attacker && entry.attacker.tor)
+    }));
 
   return response.render('laporan', {
     laporan: {
@@ -427,6 +525,8 @@ app.get('/laporan/:attackId', (request, response) => {
       alerts,
       audit,
       reportCode,
+      networkSites,
+      incidents,
       createdAt: new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(record.createdAt))
     }
   });

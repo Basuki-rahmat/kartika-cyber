@@ -31,9 +31,9 @@ const threatMethods = [
       'Naikkan tingkat perekaman log pada segmen terkait',
       'Kirim notifikasi ke analis SOC'
     ],
-    build(site) {
+    build(site, attackerIp) {
       const assetId = `${site.code}-IT-GW`;
-      const source = '10.66.13.9';
+      const source = attackerIp || '10.66.13.9';
       return Array.from({ length: 5 }, (_, index) => event({
         assetId,
         zone: 'IT',
@@ -55,11 +55,11 @@ const threatMethods = [
       'Karantina host yang terhubung',
       'Perbarui daftar alamat terblokir'
     ],
-    build(site) {
+    build(site, attackerIp) {
       return [event({
         assetId: `${site.code}-IT-WEB`,
         zone: 'IT',
-        source: '203.0.113.66',
+        source: attackerIp || '203.0.113.66',
         eventType: 'connection_open'
       })];
     }
@@ -76,9 +76,9 @@ const threatMethods = [
       'Cabut sesi akun yang terkait',
       'Jalankan playbook pemulihan dan dokumentasi insiden'
     ],
-    build(site) {
+    build(site, attackerIp) {
       const assetId = `${site.code}-HMI-01`;
-      const source = '10.66.6.35';
+      const source = attackerIp || '10.66.6.35';
       return [
         event({ assetId, zone: 'OT', source, sourceZone: 'IT', targetZone: 'OT', approved: false, eventType: 'connection_open', account: 'svc-maint', occurredAt: at(3) }),
         event({ assetId, zone: 'OT', source, eventType: 'protocol_write', account: 'svc-maint', inMaintenanceWindow: false, occurredAt: at(2) })
@@ -97,11 +97,11 @@ const threatMethods = [
       'Ambil sampel untuk analisis forensik',
       'Eskalasi ke analis tingkat lanjut'
     ],
-    build(site) {
+    build(site, attackerIp) {
       return [event({
         assetId: `${site.code}-PLC-01`,
         zone: 'OT',
-        source: '10.66.6.77',
+        source: attackerIp || '10.66.6.77',
         eventType: 'protocol_write',
         account: 'svc-ghost',
         inMaintenanceWindow: false
@@ -120,11 +120,11 @@ const threatMethods = [
       'Periksa kanal terenkripsi dan material kunci',
       'Tinjau kebijakan DLP dan retensi log'
     ],
-    build(site) {
+    build(site, attackerIp) {
       return [event({
         assetId: `${site.code}-SRV-01`,
         zone: 'IT',
-        source: '10.66.7.4',
+        source: attackerIp || '10.66.7.4',
         eventType: 'bulk_transfer',
         account: 'svc-backup'
       })];

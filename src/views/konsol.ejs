@@ -74,6 +74,37 @@
       </section>
     </section>
 
+    <section class="panel attacker-panel">
+      <div class="panel-head">
+        <div><span class="section-index">03 / ASAL PENYERANG</span><h2>Profil asal serangan (simulasi)</h2></div>
+        <span class="panel-count" id="attacker-mode">DEFAULT METODE</span>
+      </div>
+      <div class="attacker-grid">
+        <div class="preset-row" id="attacker-presets">
+          <button class="attacker-preset selected" type="button" data-preset="default" title="Pakai sumber bawaan setiap metode">Default metode</button>
+          <button class="attacker-preset" type="button" data-preset="shanghai" title="Tiongkok Telecom, Shanghai">Shanghai</button>
+          <button class="attacker-preset" type="button" data-preset="moskow" title="Rostelecom, Moskow">Moskow</button>
+          <button class="attacker-preset" type="button" data-preset="frankfurt" title="Exit VPN, Frankfurt">Frankfurt · VPN</button>
+          <button class="attacker-preset" type="button" data-preset="amsterdam" title="Relay Tor, Amsterdam">Amsterdam · Tor</button>
+          <button class="attacker-preset" type="button" data-preset="custom" title="Tulis IP & lokasi sendiri">Kustom…</button>
+        </div>
+        <div class="attacker-fields" id="attacker-fields" hidden>
+          <label class="attacker-field"><span>ALAMAT IP PENYERANG</span><input id="attacker-ip" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="mis. 103.22.188.7"></label>
+          <label class="attacker-field"><span>LOKASI TAMPAK</span><input id="attacker-location" type="text" autocomplete="off" spellcheck="false" placeholder="mis. Shanghai, Tiongkok"></label>
+          <div class="attacker-pair">
+            <label class="attacker-field"><span>LINTANG</span><input id="attacker-lat" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="31.23"></label>
+            <label class="attacker-field"><span>BUJUR</span><input id="attacker-lng" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="121.47"></label>
+          </div>
+          <label class="attacker-field"><span>ASN / PENYEDIA</span><input id="attacker-provider" type="text" autocomplete="off" spellcheck="false" placeholder="mis. AS4134 · China Telecom"></label>
+          <div class="attacker-flags">
+            <label><input type="checkbox" id="attacker-vpn"> VPN</label>
+            <label><input type="checkbox" id="attacker-tor"> Tor</label>
+          </div>
+        </div>
+        <p class="attacker-hint">Profil ini dipakai sebagai metadata sumber pada simulasi, lalu muncul di pelacakan asal, analisis AI, dan laporan penangkalan.</p>
+      </div>
+    </section>
+
     <section class="action-bar" id="action-bar">
       <div class="action-summary">
         <div class="summary-item"><span class="summary-label">TARGET</span><strong id="selected-target">Belum dipilih</strong></div>
@@ -88,7 +119,7 @@
 
     <section class="panel output-panel">
       <div class="panel-head">
-        <div><span class="section-index">03 / KELUARAN</span><h2>Log deteksi &amp; respons</h2></div>
+        <div><span class="section-index">04 / KELUARAN</span><h2>Log deteksi &amp; respons</h2></div>
         <span class="panel-count" id="detection-count">0 ALERT</span>
       </div>
       <div class="output-body" id="output-body" aria-live="polite">

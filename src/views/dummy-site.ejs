@@ -17,7 +17,29 @@
     })();
   </script>
 </head>
-<body>
+<body<%= attack ? ' class="under-attack"' : '' %> data-site-id="<%= site ? site.id : '' %>">
+  <%= attack ? '<' + '!-- mode dampak serangan aktif saat render --' + '>' : '' %>
+  <% if (attack) { %>
+  <div class="attack-overlay" id="attack-overlay">
+    <div class="attack-backdrop" aria-hidden="true"></div>
+    <div class="attack-card" role="alert">
+      <div class="attack-strip"></div>
+      <span class="attack-eyebrow">SISTEM DIRENDER · SIMULASI SERANGAN</span>
+      <h2 class="attack-title">KONTEN SITUS DISEGEL<br><span>OLEH GARUDA SHIELD RESPONSE</span></h2>
+      <p class="attack-copy">Halaman ini berada dalam mode dampak serangan siber (simulasi). Konten publik disembunyikan sementara untuk memamerkan bagaimana situs terlihat saat insiden aktif — sebelum tim merespons dan memulihkan layanan.</p>
+      <dl class="attack-facts">
+        <div><dt>VEKTOR</dt><dd><%= attack.method.name %></dd></div>
+        <div><dt>KATEGORI</dt><dd><%= attack.method.vector %></dd></div>
+        <div><dt>JUMLAH EVENT</dt><dd><%= attack.eventCount %> event terekam</dd></div>
+        <div><dt>ASAL SERANGAN</dt><dd><% if (attack.attacker) { %><%= attack.attacker.location || attack.attacker.ip || 'Tidak dideklarasikan' %><% if (attack.attacker.provider) { %> · <%= attack.attacker.provider %><% } %><% if (attack.attacker.vpn || attack.attacker.tor) { %> · <%= attack.attacker.vpn ? 'VPN' : '' %><%= attack.attacker.vpn && attack.attacker.tor ? '+' : '' %><%= attack.attacker.tor ? 'TOR' : '' %><% } %><% } else { %>Tidak dideklarasikan<% } %></dd></div>
+      </dl>
+      <div class="attack-actions">
+        <span class="attack-note">STATUS PEMULIHAN DIKENDALIKAN DARI DASHBOARD GARUDA SHIELD</span>
+        <a class="attack-link" href="/#incidents">Lihat insiden <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </div>
+  <% } %>
   <% if (!site) { %>
     <main class="not-found">
       <span class="eyebrow">GARUDA SHIELD / SIMULASI</span>
@@ -57,17 +79,8 @@
   </header>
 
   <main>
-    <section class="hero">
-      <div class="hero-bg" aria-hidden="true">
-        <div class="hero-mesh"></div><div class="sun-disc"></div>
-        <svg class="landscape" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice">
-          <path class="ridge ridge-back" d="M0 250 115 186 198 219 306 105 402 194 525 129 612 201 740 96 831 188 956 122 1052 197 1160 102 1285 196 1374 137 1440 179V420H0Z"/>
-          <path class="ridge ridge-mid" d="m0 286 129-73 127 62 120-109 123 101 129-57 111 71 119-112 117 85 128-75 123 85 114-65v221H0Z"/>
-          <path class="ridge ridge-front" d="m0 322 143-65 109 40 138-74 122 81 110-38 118 57 139-86 109 54 131-60 112 58 109-39v190H0Z"/>
-          <path class="field-lines" d="M0 350q180-50 360 8t360-3 360 7 360-12M0 377q180-48 360 7t360-1 360 8 360-14M0 402q180-43 360 4t360 0 360 8 360-12"/>
-        </svg>
-      </div>
-
+    <section class="hero hero-banner-mode">
+      <img class="hero-banner-img" src="/kartika-hero.png" alt="Banner KARTIKA CYBER 2026">
       <div class="hero-inner">
         <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">GARUDA SHIELD</a><span>/</span><a href="/#sites">Situs terpantau</a><span>/</span><strong><%= site.code %></strong></nav>
         <span class="hero-tag status-tag-<%= site.status %>"><i class="tag-dot"></i> ENDPOINT SIMULASI · <%= site.status.toUpperCase() %></span>

@@ -31,6 +31,7 @@
         <form action="/demo/reset" method="post"><button class="reset-button" type="submit"><span aria-hidden="true">↻</span> Reset skenario</button></form>
       </div>
       <div class="rail-version"><span>GS / LOCAL BUILD</span><span>v0.2.0</span></div>
+      <button class="rail-toggle" id="rail-toggle" type="button" title="Minimalkan panel kiri" aria-pressed="false"><span aria-hidden="true">‹</span></button>
     </aside>
 
     <main class="main">
@@ -118,6 +119,7 @@
               <a class="ai-button ai-button-report" id="ai-report" href="/laporan" target="_blank" rel="noopener" hidden>Cetak laporan &#8599;</a>
             </div>
             <p class="ai-summary" id="ai-summary">—</p>
+            <p class="ai-recovered-note" id="ai-recovered-note" hidden>AI menilai insiden sudah tertangani pada tingkat analisis — tetap jalankan <strong>Pulihkan situs</strong> untuk mengeksekusi playbook pemulihan.</p>
             <div class="ai-columns">
               <div class="ai-col"><span class="ai-col-title">TINDAKAN DISARANKAN</span><ol class="ai-actions" id="ai-actions"></ol></div>
               <div class="ai-col"><span class="ai-col-title">STATUS PEMULIHAN</span><ul class="ai-recovery" id="ai-recovery"></ul></div>
@@ -185,7 +187,8 @@
       <footer class="footer"><span>GARUDA SHIELD <b>·</b> OFFLINE DEMONSTRATOR</span><span>SELURUH NAMA ENDPOINT, STATUS, TLS, DAN LATENSI ADALAH DATA FIKTIF</span></footer>
     </main>
   </div>
-  <audio id="alarm-audio" src="/mixkit-emergency-alert-alarm-1007.webm" loop preload="auto"></audio>
+  <!-- "Air Raid Siren" by orangefreesounds.com — CC BY 4.0, commercial use permitted -->
+  <audio id="alarm-audio" src="/air-raid-siren.mp3" loop preload="auto"></audio>
   <script id="site-data" type="application/json"><%- JSON.stringify(kodamSites) %></script>
   <script src="/vendor/leaflet/leaflet.js" defer></script>
   <script src="/garuda.js" defer></script>
