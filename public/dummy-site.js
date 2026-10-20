@@ -166,4 +166,48 @@
       newsSearch.focus();
     }
   });
+
+  /* Mode dampak serangan: pantau /api/insiden-aktif secara live */
+  const siteId = root.dataset ? root.dataset.siteId : '';
+  if (siteId) {
+    const overlay = document.querySelector('#attack-overlay');
+    let attackVisible = document.body.classList.contains('under-attack');
+    let reloadPending = false;
+
+    function enterAttack(record) {
+      if (attackVisible && overlay) return;
+      document.body.classList.add('attack-enter');
+      window.setTimeout(() => document.body.classList.remove('attack-enter'), 900);
+      document.body.classList.add('under-attack');
+      attackVisible = true;
+      reloadPending = true;
+    }
+
+    function leaveAttack() {
+      if (!attackVisible) return;
+      attackVisible = false;
+      reloadPending = false;
+      document.body.classList.remove('under-attack');
+      if (toast) showToast('Situs web dipulihkan · efek serangan dihentikan (simulasi)');
+      reloadPending = true;
+    }
+
+    async function pollIncident() {
+      try {
+        const res = await fetch('/api/insiden-aktif', { headers: { accept: 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const active = data && data.active && data.active.site && data.active.site.id === siteId ? data.active : null;
+        if (active) enterAttack(active);
+        else leaveAttack();
+        if (reloadPending && !attackVisible) {
+          reloadPending = false;
+          window.setTimeout(() => window.location.reload(), 1200);
+        }
+      } catch (error) {}
+    }
+
+    pollIncident();
+    window.setInterval(pollIncident, 3000);
+  }
 })();

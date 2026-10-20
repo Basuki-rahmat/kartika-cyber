@@ -183,3 +183,24 @@ Pengumuman Finalis
 24 November 2026
 Final + Closing Ceremony
 Hackathon final dan conference seharian di Hotel Aston Kartika, Jakarta. Presentasi finalis, keynote speaker, talkshow, dan pengumuman 3 pemenang.
+
+
+
+tambahan 
+
+Lengkapi link karya, video demo, slide penjelasan, thumbnail, dan screenshot karya kamu di bawah ini, lalu tekan Simpan. Pastikan semua link bisa diakses publik supaya tim juri dapat menilai karyamu.
+
+Link Karya / Project*
+Link boleh menggunakan platform apapun selama bisa diakses publik. Contoh: https://webkarya.com/nama-project-kamu
+
+Masukkan link karya di sini
+Link Video Demo di YouTube*
+Video demo yang bisa diakses publik, contoh: https://www.youtube.com/watch?v=xxxxxxxxxxx
+
+contoh: https://www.youtube.com/watch?v=xxxxxxxxxxx
+Link Slide Penjelasan Karya*
+Bisa pakai Google Docs/Slides, Canva, atau platform apa pun, pastikan aksesnya publik (bukan private)
+
+contoh: https://docs.google.com/presentation/d/xxxxxxxxxxx
+Thumbnail Karya*
+Wajib berukuran 1200x630 px, format JPG, PNG, atau WebP, ukuran file maksimal 500 KB

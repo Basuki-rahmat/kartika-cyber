@@ -92,6 +92,93 @@
     });
   });
 
+  /* Attacker source profiling */
+  const attackerPresets = {
+    default: null,
+    shanghai: { ip: '103.22.188.7', location: 'Shanghai, Tiongkok', lat: '31.23', lng: '121.47', provider: 'AS4134 · China Telecom', vpn: false, tor: false, confidence: 78 },
+    moskow: { ip: '185.22.59.10', location: 'Moskow, Rusia', lat: '55.75', lng: '37.62', provider: 'AS12389 · Rostelecom', vpn: false, tor: false, confidence: 74 },
+    frankfurt: { ip: '203.0.113.77', location: 'Frankfurt, Jerman (exit node)', lat: '50.11', lng: '8.68', provider: 'AS64500 · Jaringan anonim', vpn: true, tor: false, confidence: 38 },
+    amsterdam: { ip: '198.51.100.44', location: 'Amsterdam, Belanda (relay)', lat: '52.37', lng: '4.9', provider: 'AS64501 · Relay anonim', vpn: false, tor: true, confidence: 31 }
+  };
+  const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const presetButtons = [...document.querySelectorAll('.attacker-preset')];
+  const attackerFields = document.querySelector('#attacker-fields');
+  const attackerIpInput = document.querySelector('#attacker-ip');
+  const attackerLocationInput = document.querySelector('#attacker-location');
+  const attackerLatInput = document.querySelector('#attacker-lat');
+  const attackerLngInput = document.querySelector('#attacker-lng');
+  const attackerProviderInput = document.querySelector('#attacker-provider');
+  const attackerVpnInput = document.querySelector('#attacker-vpn');
+  const attackerTorInput = document.querySelector('#attacker-tor');
+  const attackerModeLabel = document.querySelector('#attacker-mode');
+  let attackerPreset = 'default';
+
+  function filledIp() {
+    return attackerIpInput ? attackerIpInput.value.trim() : '';
+  }
+  function hasIp() {
+    return presetSelected() !== 'default' && filledIp() !== '';
+  }
+  function presetSelected() {
+    return attackerPreset;
+  }
+
+  function fillAttackerFields(profile) {
+    if (!profile || !attackerIpInput) return;
+    attackerIpInput.value = profile.ip;
+    attackerLocationInput.value = profile.location;
+    attackerLatInput.value = profile.lat;
+    attackerLngInput.value = profile.lng;
+    attackerProviderInput.value = profile.provider;
+    attackerVpnInput.checked = Boolean(profile.vpn);
+    attackerTorInput.checked = Boolean(profile.tor);
+  }
+
+  function buildAttackerPayload() {
+    if (presetSelected() === 'default') return {};
+    const ip = filledIp();
+    if (!ipv4Pattern.test(ip) || ip.split('.').some((part) => Number(part) > 255)) {
+      return { error: 'Isi alamat IP penyerang dengan format IPv4 yang valid.' };
+    }
+    const payload = { attackerIp: ip };
+    const location = (attackerLocationInput ? attackerLocationInput.value : '').trim();
+    if (location) {
+      payload.attackerLocation = { location };
+      const lat = Number(attackerLatInput ? attackerLatInput.value : '');
+      const lng = Number(attackerLngInput ? attackerLngInput.value : '');
+      if (attackerLatInput && attackerLatInput.value.trim() && Number.isFinite(lat)) payload.attackerLocation.lat = lat;
+      if (attackerLngInput && attackerLngInput.value.trim() && Number.isFinite(lng)) payload.attackerLocation.lng = lng;
+      const provider = (attackerProviderInput ? attackerProviderInput.value : '').trim();
+      if (provider) payload.attackerLocation.provider = provider;
+      if (attackerVpnInput && attackerVpnInput.checked) payload.attackerLocation.vpn = true;
+      if (attackerTorInput && attackerTorInput.checked) payload.attackerLocation.tor = true;
+    }
+    return payload;
+  }
+
+  presetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      presetButtons.forEach((item) => item.classList.toggle('selected', item === button));
+      attackerPreset = button.dataset.preset;
+      const preset = attackerPresets[attackerPreset];
+      if (attackerFields) attackerFields.hidden = attackerPreset === 'default';
+      if (attackerModeLabel) attackerModeLabel.textContent = attackerPreset === 'default' ? 'DEFAULT METODE' : 'PROFIL DIATUR';
+      if (attackerPreset !== 'default') fillAttackerFields(preset);
+      if (attackerPreset === 'custom' && attackerIpInput) attackerIpInput.focus();
+    });
+  });
+
+  function resetAttackerUi() {
+    presetButtons.forEach((item) => item.classList.remove('selected'));
+    if (presetButtons[0]) presetButtons[0].classList.add('selected');
+    attackerPreset = 'default';
+    if (attackerFields) attackerFields.hidden = true;
+    [attackerIpInput, attackerLocationInput, attackerLatInput, attackerLngInput, attackerProviderInput].forEach((input) => { if (input) input.value = ''; });
+    if (attackerVpnInput) attackerVpnInput.checked = false;
+    if (attackerTorInput) attackerTorInput.checked = false;
+    if (attackerModeLabel) attackerModeLabel.textContent = 'DEFAULT METODE';
+  }
+
   document.querySelector('#reset-selection').addEventListener('click', () => {
     targetOptions.forEach((item) => item.classList.remove('selected'));
     document.querySelectorAll('.method-card').forEach((item) => item.classList.remove('selected'));
@@ -100,6 +187,7 @@
     selectedSite = null;
     selectedMethod = null;
     syncLaunchState();
+    resetAttackerUi();
     showToast('Pilihan direset');
   });
 
@@ -136,7 +224,8 @@
     tags.innerHTML = `
       <span class="tag tag-target">TARGET ${result.site.code}</span>
       <span class="tag tag-method">${result.method.code}</span>
-      <span class="tag tag-launch">${result.eventCount} EVENT</span>`;
+      <span class="tag tag-launch">${result.eventCount} EVENT</span>${result.attacker ? `
+      <span class="tag tag-attacker">ASAL ${result.attacker.ip}${result.attacker.location ? ` · ${result.attacker.location}` : ''}</span>` : ''}`;
     body.appendChild(tags);
 
     const note = document.createElement('p');
@@ -188,18 +277,23 @@
     syncLaunchState();
     if (launchButton) launchButton.disabled = true;
     try {
+      const attackerPayload = buildAttackerPayload();
+      if (attackerPayload.error) throw new Error(attackerPayload.error);
       const response = await fetch('/api/serangan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteId: site.id, methodId: method.id, attackId })
+        body: JSON.stringify({ siteId: site.id, methodId: method.id, attackId, ...attackerPayload })
       });
-      if (!response.ok) throw new Error('request failed');
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({}));
+        throw new Error(detail.error || 'request failed');
+      }
       const result = await response.json();
       renderLog(result, new Date().toLocaleTimeString('id-ID'), popupBlocked, dashboardOpen);
       const critical = result.detections.filter((detection) => detection.severity === 'critical').length;
       showToast(`${result.detections.length} alert terpicu${critical ? ` · ${critical} kritis` : ''}`);
     } catch (error) {
-      showToast('Gagal meluncurkan simulasi.', true);
+      showToast(error.message || 'Gagal meluncurkan simulasi.', true);
     } finally {
       busy = false;
       syncLaunchState();

@@ -69,7 +69,8 @@ function markerIcon(site) {
 
 siteData.forEach((site) => {
   const marker = L.marker([site.lat, site.lng], { icon: markerIcon(site), title: `${site.name} · ${statusNames[site.status]}` });
-  marker.bindPopup(`<strong>${site.name}</strong><br>${site.city} · ${statusNames[site.status]}<br><span class="popup-dummy">SITUS DUMMY · ${site.latency === null ? 'TIDAK MERESPONS' : `${site.latency} ms SIM.`}</span>`);
+  const thumb = `<img class="popup-thumb" src="/thumbs/${encodeURIComponent(site.id)}.jpg" alt="Pratinjau ${site.name}" loading="lazy" onerror="this.remove()">`;
+  marker.bindPopup(`${thumb}<strong>${site.name}</strong><br>${site.city} · ${statusNames[site.status]}<br><span class="popup-dummy">SITUS DUMMY · ${site.latency === null ? 'TIDAK MERESPONS' : `${site.latency} ms SIM.`}</span>`);
   marker.on('click', () => selectSite(site.id));
   marker.addTo(map);
   markers.set(site.id, marker);
@@ -116,10 +117,10 @@ fetch('/data/indonesia-province-simple.json')
   .then((geojson) => {
     const provinceLayer = L.geoJSON(geojson, {
       style: {
-        color: '#547663',
+        color: '#54804a',
         weight: 1.15,
         opacity: 0.85,
-        fillColor: '#344f3b',
+        fillColor: '#2f4a25',
         fillOpacity: 0.66
       },
       onEachFeature: (feature, layer) => {
@@ -171,7 +172,7 @@ function severityLevel(detections) {
   return worst === 'critical' ? 'critical' : worst === 'high' ? 'high' : 'medium';
 }
 
-const attackColor = { critical: '#ef5a52', high: '#eab95a', medium: '#77c58b' };
+const attackColor = { critical: '#ff4d6d', high: '#ffbb55', medium: '#48d183' };
 const recoveryPlaybook = [
   'Isolasi aset terdampak',
   'Blokir sumber serangan pada IDS/IPS',
@@ -229,11 +230,12 @@ function renderAttack(attack) {
   const responses = (attack.responses || []).map((step) => `<li>${escapeHtml(step)}</li>`).join('');
 
   const popup = `<div class="attack-popup-inner">
+      <img class="popup-thumb attack-popup-thumb" src="/thumbs/${encodeURIComponent(site.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">
       <span class="attack-popup-head">SIMULASI SERANGAN · ${escapeHtml(attack.method.code)}</span>
       <strong class="attack-popup-title">${escapeHtml(attack.method.name)} → ${escapeHtml(site.name)}</strong>
       <div>${detections}</div>
       ${responses ? `<ul class="attack-popup-responses">${responses}</ul>` : ''}
-      <a class="attack-popup-open" href="${escapeHtml(attack.url)}" target="_blank" rel="noopener">Buka situs dummy target ↗</a>
+      <a class="attack-popup-open" href="${escapeHtml(attack.url)}" target="_blank" rel="noopener">Buka situs dummy target  ↗</a>
     </div>`;
 
   L.popup({ className: 'attack-popup', maxWidth: 320, autoPan: true, offset: [0, -6], closeButton: true })
@@ -246,11 +248,75 @@ function renderAttack(attack) {
   runAiAnalysis(attack);
 }
 
-/* Incident alarm */
+/* Incident alarm — file sirine serangan udara (mp3 loop); fallback Web Audio wail naik-turun */
 const alarmAudio = document.querySelector('#alarm-audio');
 const alarmButton = document.querySelector('#alarm-toggle');
 let alarmMuted = false;
 try { alarmMuted = localStorage.getItem('garuda-alarm-muted') === '1'; } catch (error) {}
+
+let alarmCtx = null;
+let alarmGain = null;
+let sirenOscs = null;
+
+function openSiren() {
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return false;
+  if (!alarmCtx) {
+    alarmCtx = new AudioCtor();
+    alarmGain = alarmCtx.createGain();
+    alarmGain.gain.value = 0.0001;
+    alarmGain.connect(alarmCtx.destination);
+    const carrier = alarmCtx.createOscillator();
+    carrier.type = 'sine';
+    carrier.frequency.value = 420;
+    const sweep = alarmCtx.createOscillator();
+    sweep.type = 'sine';
+    sweep.frequency.value = 0.35;
+    const sweepDepth = alarmCtx.createGain();
+    sweepDepth.gain.value = 330;
+    sweep.connect(sweepDepth).connect(carrier.frequency);
+    carrier.connect(alarmGain);
+    carrier.start();
+    sweep.start();
+    sirenOscs = [carrier, sweep];
+  }
+  return true;
+}
+
+function sirenRunning() {
+  return Boolean(alarmCtx && alarmGain && alarmGain.gain.value > 0.01);
+}
+
+function startSiren() {
+  if (!openSiren()) return false;
+  if (alarmCtx.state === 'suspended' && typeof alarmCtx.resume === 'function') alarmCtx.resume().catch(() => {});
+  const now = alarmCtx.currentTime;
+  alarmGain.gain.cancelScheduledValues(now);
+  alarmGain.gain.setTargetAtTime(0.12, now, 0.08);
+  return true;
+}
+
+function stopSiren(hard) {
+  if (!alarmCtx || !alarmGain) return;
+  const now = alarmCtx.currentTime;
+  alarmGain.gain.cancelScheduledValues(now);
+  alarmGain.gain.setTargetAtTime(0.0001, now, 0.04);
+  if (hard === true) setTimeout(cleanupSiren, 320);
+}
+
+function cleanupSiren() {
+  if (sirenOscs) {
+    for (const osc of sirenOscs) {
+      try { osc.stop(); } catch (error) {}
+    }
+    sirenOscs = null;
+  }
+  if (alarmCtx) {
+    try { alarmCtx.close(); } catch (error) {}
+  }
+  alarmCtx = null;
+  alarmGain = null;
+}
 
 function updateAlarmButton(active) {
   if (!alarmButton) return;
@@ -267,20 +333,26 @@ function updateAlarmButton(active) {
 
 function startAlarm() {
   updateAlarmButton(true);
-  if (!alarmAudio || alarmMuted) return;
-  alarmAudio.loop = true;
-  const playback = alarmAudio.play();
-  if (playback && typeof playback.catch === 'function') {
-    playback.catch(() => {
-      if (alarmButton) {
-        alarmButton.classList.add('blocked');
-        alarmButton.textContent = 'AKTIFKAN ALARM';
-      }
-    });
+  if (alarmMuted) return;
+  if (alarmAudio) {
+    alarmAudio.volume = 0.85;
+    alarmAudio.loop = true;
+    const playback = alarmAudio.play();
+    if (playback && typeof playback.catch === 'function') {
+      playback.catch(() => {
+        if (!startSiren() && alarmButton) {
+          alarmButton.classList.add('blocked');
+          alarmButton.textContent = 'AKTIFKAN ALARM';
+        }
+      });
+    }
+    return;
   }
+  startSiren();
 }
 
 function stopAlarm() {
+  stopSiren(true);
   if (alarmAudio) {
     alarmAudio.pause();
     try { alarmAudio.currentTime = 0; } catch (error) {}
@@ -290,14 +362,17 @@ function stopAlarm() {
 
 if (alarmButton) {
   alarmButton.addEventListener('click', () => {
-    const playing = alarmAudio && !alarmAudio.paused;
-    if (!playing && !alarmMuted) {
+    const active = sirenRunning() || (alarmAudio && !alarmAudio.paused);
+    if (!active && !alarmMuted) {
       startAlarm();
       return;
     }
     alarmMuted = !alarmMuted;
     try { localStorage.setItem('garuda-alarm-muted', alarmMuted ? '1' : '0'); } catch (error) {}
-    if (alarmMuted && alarmAudio) alarmAudio.pause();
+    if (alarmMuted) {
+      stopSiren(true);
+      if (alarmAudio) alarmAudio.pause();
+    }
     if (!alarmMuted) startAlarm();
     updateAlarmButton(true);
   });
@@ -327,7 +402,7 @@ function stopAttackAnimation() {
   }
   map.closePopup();
   const frame = document.querySelector('#map-frame');
-  if (frame) frame.style.setProperty('--attack-color', '#77c58b');
+  if (frame) frame.style.setProperty('--attack-color', '#48d183');
   const alertElement = document.querySelector('#attack-alert');
   if (alertElement) {
     alertElement.className = 'attack-alert attack-alert-medium';
@@ -484,7 +559,9 @@ function renderAi(analysis, attack) {
   if (meta) meta.textContent = `Model: ${analysis.model} · Sumber: ${analysis.source === 'groq' ? 'Groq API' : 'Heuristik lokal'}${analysis.note ? ` · ${analysis.note}` : ''}`;
 
   const recoverButton = document.querySelector('#ai-recover');
-  if (recoverButton) recoverButton.disabled = analysis.recovered;
+  if (recoverButton) recoverButton.disabled = false;
+  const recoveredNote = document.querySelector('#ai-recovered-note');
+  if (recoveredNote) recoveredNote.hidden = !analysis.recovered;
   const reportLink = document.querySelector('#ai-report');
   if (reportLink && attack.id) {
     reportLink.href = `/laporan/${encodeURIComponent(attack.id)}`;
@@ -493,19 +570,39 @@ function renderAi(analysis, attack) {
   const runButton = document.querySelector('#ai-run');
   if (runButton) runButton.disabled = false;
 
-  renderRecovery(recoveryPlaybook, analysis.recovered);
+  renderRecovery(recoveryPlaybook, false);
   renderOrigins(analysis);
-  if (analysis.recovered) completeRecovery();
 }
 
 async function runAiAnalysis(attack, force = false) {
   showAiLoading(attack);
-  try {
-    const response = await fetch('/api/analisis', {
+  const thinkingSteps = [
+    'Mengumpulkan bukti event pada koordinat target…',
+    'Mengorelasikan rantai serangan lintas zona…',
+    'Memeriksa deteksi & menilai tingkat dampak…',
+    'Melacak sidik jari asal koneksi dari metadata…',
+    'Menyusun rekomendasi penanganan…'
+  ];
+  const summaryElement = document.querySelector('#ai-summary');
+  if (summaryElement) summaryElement.classList.add('thinking');
+  let stageIndex = 0;
+  const stageTimer = summaryElement
+    ? window.setInterval(() => {
+      summaryElement.textContent = thinkingSteps[stageIndex % thinkingSteps.length];
+      stageIndex += 1;
+    }, 550)
+    : null;
+  const [response] = await Promise.all([
+    fetch('/api/analisis', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ attackId: attack.id, force })
-    });
+    }),
+    delay(1100)
+  ]);
+  if (stageTimer) window.clearInterval(stageTimer);
+  if (summaryElement) summaryElement.classList.remove('thinking');
+  try {
     if (!response.ok) throw new Error('Analisis gagal.');
     renderAi(await response.json(), attack);
   } catch (error) {
@@ -710,3 +807,18 @@ probeRowEls.forEach(updateProbeTime);
 recomputeProbeCounts();
 sortProbeRows();
 setInterval(probeTick, 1000);
+/* Toggle minimalkan panel kiri */
+(() => {
+  const railToggle = document.querySelector('#rail-toggle');
+  if (!railToggle) return;
+  try {
+    if (localStorage.getItem('gs-rail-collapsed') === '1') document.body.classList.add('rail-collapsed');
+  } catch (error) {}
+  railToggle.setAttribute('aria-pressed', document.body.classList.contains('rail-collapsed') ? 'true' : 'false');
+  railToggle.addEventListener('click', () => {
+    const collapsed = document.body.classList.toggle('rail-collapsed');
+    railToggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    try { localStorage.setItem('gs-rail-collapsed', collapsed ? '1' : '0'); } catch (error) {}
+    setTimeout(() => { if (typeof map !== 'undefined' && map.invalidateSize) map.invalidateSize(); }, 240);
+  });
+})();

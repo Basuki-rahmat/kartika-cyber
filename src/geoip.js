@@ -29,8 +29,32 @@ const ORIGIN_TABLE = [
   }
 ];
 
-function trackSource(ip) {
+function profileFromOverride(ip, override) {
+  const lat = Number(override.lat);
+  const lng = Number(override.lng);
+  return {
+    ip,
+    kind: PRIVATE_PATTERN.test(ip) ? 'internal' : 'public',
+    apparentLocation: override.location || 'Lokasi simulasi tidak dicantumkan',
+    countryCode: override.countryCode || null,
+    lat: Number.isFinite(lat) ? lat : undefined,
+    lng: Number.isFinite(lng) ? lng : undefined,
+    asn: override.asn || null,
+    provider: override.provider || null,
+    vpn: Boolean(override.vpn),
+    tor: Boolean(override.tor),
+    proxy: Boolean(override.proxy),
+    confidence: Number.isFinite(Number(override.confidence)) ? Math.max(0, Math.min(100, Math.round(Number(override.confidence)))) : 70,
+    note: 'Lokasi berasal dari profil penyerang simulasi pada konsol red-team, bukan penelusuran riil.'
+  };
+}
+
+function trackSource(ip, override) {
   const address = typeof ip === 'string' ? ip : '';
+
+  if (override && typeof override === 'object' && address) {
+    return profileFromOverride(address, override);
+  }
 
   if (!address) {
     return {
@@ -98,8 +122,9 @@ function trackSource(ip) {
   };
 }
 
-function trackSources(sources) {
-  return (Array.isArray(sources) ? sources : []).map(trackSource);
+function trackSources(sources, overrides) {
+  const table = overrides && typeof overrides === 'object' && !Array.isArray(overrides) ? overrides : {};
+  return (Array.isArray(sources) ? sources : []).map((ip) => trackSource(ip, table[ip]));
 }
 
 module.exports = { trackSource, trackSources };
