@@ -5,4 +5,4 @@ Tantangan & Konteks Keamanan Siber IT/OT” sebagai bekal bagi peserta untuk mem
 tahapan ada pada folder /tahapan lomba
 
 bangun app dengan node.js 
-fokus pada kategori pengakalan
+fokus pada kategori penangkalan
