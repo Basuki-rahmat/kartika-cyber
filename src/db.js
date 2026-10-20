@@ -133,6 +133,18 @@ function loadDemoEvents() {
   refreshAlerts();
 }
 
+function getAuditByAlertIds(ids) {
+  const unique = [...new Set(ids)].filter((id) => Number.isSafeInteger(id));
+  if (unique.length === 0) return [];
+  const placeholders = unique.map(() => '?').join(', ');
+  return database.prepare(`
+    SELECT audit_log.*, alerts.title AS alert_title
+    FROM audit_log JOIN alerts ON alerts.id = audit_log.alert_id
+    WHERE audit_log.alert_id IN (${placeholders})
+    ORDER BY audit_log.created_at
+  `).all(...unique);
+}
+
 function getDashboardData(filters = {}) {
   const eventConditions = [];
   const eventParameters = [];
@@ -236,4 +248,4 @@ function resetDemo() {
 
 if (database.prepare('SELECT COUNT(*) AS count FROM events').get().count === 0) loadDemoEvents();
 
-module.exports = { database, getAlertsByIds, getDashboardData, insertEvent, refreshAlerts, resetDemo, updateAlertStatus };
+module.exports = { database, getAlertsByIds, getAuditByAlertIds, getDashboardData, insertEvent, refreshAlerts, resetDemo, updateAlertStatus };

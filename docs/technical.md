@@ -39,6 +39,7 @@ Koordinat, nama endpoint, status, latensi, uptime, HTTP, dan TLS pada inventory 
 - `POST /api/analisis`: analisis insiden dengan heuristik lokal atau Groq opsional.
 - `POST /api/pulihkan`: tandai insiden simulasi pulih; tidak mengubah sistem atau perangkat.
 - `POST /alerts/:id/status`: ubah status alert lokal dan tulis audit trail.
+- `GET /laporan/:attackId`: halaman laporan insiden siap cetak dari operator ke pimpinan. Isinya mencakup identitas target dan metode, penilaian insiden, analisis operator, tabel alert beserta status tindak lanjut, pelacakan asal serangan, playbook respons, dan jejak audit, lengkap dengan stempel mode demo. Cetak memakai dialog print browser (Ctrl+P) untuk menyimpan PDF; laporan disusun ulang dari data insiden dan analisis yang ada.
 - `POST /demo/reset`: hapus dan muat ulang event/alert demo.
 
 Contoh respons sukses `POST /api/events`:

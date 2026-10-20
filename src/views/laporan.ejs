@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= laporan ? `${laporan.reportCode} | Laporan Insiden GARUDA SHIELD` : 'Laporan insiden tidak ditemukan | GARUDA SHIELD' %></title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color: #17211c; background: #f2f5f2; margin: 0; padding: 24px 12px; }
+    .sheet { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid #d7e0d8; padding: 34px 40px 40px; }
+    .doc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 3px solid #123a32; padding-bottom: 14px; }
+    .doc-head h1 { font-size: 18px; margin: 0 0 3px; letter-spacing: .03em; }
+    .doc-head small { display: block; color: #5f6d66; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .doc-code { font-family: Consolas, monospace; font-size: 11px; color: #123a32; border: 1px solid #c7d5ca; border-radius: 6px; padding: 7px 12px; white-space: nowrap; }
+    .demo-stamp { display: inline-block; margin-top: 8px; font-family: Consolas, monospace; font-size: 9px; color: #8a5013; border: 1px dashed #d1a55c; background: #fdf6ea; padding: 5px 9px; border-radius: 5px; letter-spacing: .06em; }
+    section { margin-top: 24px; }
+    h2 { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #123a32; border-bottom: 1px solid #d7e0d8; padding-bottom: 6px; margin: 0 0 12px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .kv { border: 1px solid #e2e9e3; border-radius: 8px; padding: 10px 12px; }
+    .kv span { display: block; font-size: 9px; letter-spacing: .1em; color: #75817c; text-transform: uppercase; margin-bottom: 4px; }
+    .kv strong { font-size: 13px; }
+    .kv small { font-size: 10.5px; color: #45544c; }
+    .narrative { font-size: 13px; line-height: 1.65; background: #f7faf7; border-left: 3px solid #245b4f; padding: 12px 16px; margin: 0 0 10px; }
+    .meta { font-size: 10.5px; color: #5f6d66; font-family: Consolas, monospace; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: #123a32; color: #fff; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-align: left; padding: 8px 10px; }
+    td { border: 1px solid #e2e9e3; padding: 8px 10px; vertical-align: top; }
+    .sev { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .08em; border-radius: 999px; padding: 3px 9px; color: #fff; }
+    .sev-critical { background: #a13b34; } .sev-high { background: #9d6b1f; } .sev-medium { background: #4b7a56; } .sev-low { background: #63766d; }
+    .status-chip { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .06em; border-radius: 4px; padding: 3px 8px; border: 1px solid #c7d5ca; color: #45544c; background: #f4f7f4; }
+    .evidence { margin: 6px 0 0; padding: 0; list-style: none; font-size: 10.5px; color: #5f6d66; font-family: Consolas, monospace; }
+    .evidence li { margin-top: 2px; }
+    .objects { margin: 0; padding-left: 20px; }
+    .objects li { font-size: 12.5px; line-height: 1.75; }
+    .origin { border: 1px solid #e2e9e3; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; }
+    .origin code { font-family: Consolas, monospace; font-weight: 700; font-size: 13px; }
+    .origin small { color: #75817c; }
+    .conf { display: inline-block; width: 130px; height: 6px; background: #e6ece7; border-radius: 999px; overflow: hidden; vertical-align: middle; margin: 0 6px; }
+    .conf i { display: block; height: 100%; background: #245b4f; }
+    .note { font-size: 11px; color: #5f6d66; margin: 8px 0 0; line-height: 1.55; }
+    .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 44px; }
+    .sign { text-align: center; font-size: 12px; }
+    .sign .line { margin-top: 58px; border-top: 1px solid #17211c; padding-top: 6px; letter-spacing: .06em; font-size: 11px; }
+    footer { margin-top: 32px; border-top: 2px solid #123a32; padding-top: 10px; font-size: 9.5px; color: #5f6d66; font-family: Consolas, monospace; letter-spacing: .02em; line-height: 1.6; }
+    .print-bar { max-width: 860px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .print-bar a { font-size: 12px; color: #123a32; }
+    .print-bar button { border: 1px solid #123a32; background: #123a32; color: #fff; border-radius: 8px; padding: 9px 18px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .missing { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid #d7e0d8; padding: 40px; text-align: center; font-size: 13px; }
+    .missing a { color: #123a32; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .sheet { border: none; max-width: none; padding: 0; }
+      .print-bar { display: none; }
+      th { background: #123a32 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      section { break-inside: avoid; }
+      footer { border-color: #17211c; }
+    }
+  </style>
+</head>
+<body>
+  <% if (!laporan) { %>
+    <main class="missing">
+      <h1>Laporan insiden tidak ditemukan</h1>
+      <p>Insiden simulasi memakai penyimpanan sementara di memori dan hilang setelah server dimulai ulang. Luncurkan kembali simulasi dari <a href="/konsol">Konsol Red Team</a> untuk membuat insiden baru.</p>
+      <p><a href="/">Kembali ke dashboard</a></p>
+    </main>
+  <% } else { %>
+  <div class="print-bar">
+    <a href="/">← Kembali ke dashboard GARUDA SHIELD</a>
+    <button type="button" onclick="window.print()">Cetak / Simpan PDF</button>
+  </div>
+
+  <article class="sheet">
+    <header class="doc-head">
+      <div>
+        <h1>LAPORAN INSIDEN — GARUDA SHIELD</h1>
+        <small>Operator ke pimpinan &middot; purwarupa Defensive Shield</small>
+        <span class="demo-stamp">MODE DEMO &middot; SELURUH DATA SIMULASI &middot; BUKAN KONDISI SISTEM NYATA</span>
+      </div>
+      <div class="doc-code"><%= laporan.reportCode %></div>
+    </header>
+
+    <section>
+      <h2>A. Informasi ringkas insiden</h2>
+      <div class="summary-grid">
+        <div class="kv"><span>Target</span><strong><%= laporan.record.site.name %></strong> <small>(<%= laporan.record.site.code %>)</small></div>
+        <div class="kv"><span>Lokasi target</span><strong style="font-size:11.5px"><%= laporan.record.site.city %></strong></div>
+        <div class="kv"><span>Metode simulasi</span><strong><%= laporan.record.method.code %></strong> <small><%= laporan.record.method.name %></small></div>
+        <div class="kv"><span>Waktu insiden</span><strong style="font-size:11.5px"><%= laporan.createdAt %></strong></div>
+        <div class="kv"><span>Vektor</span><strong style="font-size:11.5px"><%= laporan.record.method.vector %></strong></div>
+        <div class="kv"><span>Jumlah event</span><strong><%= laporan.record.eventCount %> event sintetis</strong></div>
+        <div class="kv"><span>Penilaian</span><strong><%= (laporan.analysis.status || 'perlu_tindakan') === 'aman' ? 'AMAN' : 'PERLU TINDAKAN' %></strong> <small>tingkat <%= laporan.analysis.severity %></small></div>
+        <div class="kv"><span>Status penanganan</span><strong><%= (laporan.analysis.recovered || laporan.record.resolved) ? 'SUDAH DIPULIHKAN' : 'MASIH DIPANTAU' %></strong></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>B. Ringkasan analisis operator</h2>
+      <p class="narrative"><%= laporan.analysis.summary %></p>
+      <p class="meta">Model: <%= laporan.analysis.model %> &middot; Sumber: <%= laporan.analysis.source === 'groq' ? 'Groq API' : 'Heuristik lokal' %> &middot; Keyakinan: <%= laporan.analysis.confidence %>%<%= laporan.analysis.note ? ` · ${laporan.analysis.note}` : '' %></p>
+      <% if ((laporan.analysis.actions || []).length) { %>
+        <h2 style="margin-top:14px">Tindakan yang direkomendasikan</h2>
+        <ol class="objects">
+          <% laporan.analysis.actions.forEach((item) => { %><li><%= item %></li><% }) %>
+        </ol>
+      <% } %>
+    </section>
+
+    <section>
+      <h2>C. Deteksi dan status tindak lanjut</h2>
+      <% if (laporan.alerts.length === 0) { %>
+        <p style="font-size:12px">Tidak ada aturan deteksi yang terpicu pada insiden ini.</p>
+      <% } else { %>
+      <table>
+        <thead>
+          <tr><th style="width:34px">No</th><th style="width:80px">Aturan</th><th>Temuan</th><th style="width:88px">Tingkat</th><th style="width:120px">Status alert</th></tr>
+        </thead>
+        <tbody>
+          <% laporan.alerts.forEach((alert, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><code style="font-family:Consolas,monospace"><%= alert.ruleId %></code></td>
+            <td>
+              <strong><%= alert.title %></strong><br>
+              <small style="color:#45544c"><%= alert.recommendation %></small>
+              <% if (alert.evidence.length) { %>
+              <ul class="evidence">
+                <% alert.evidence.forEach((ev) => { %>
+                  <li>&bull; <%= ev.eventType %> &middot; sumber <%= ev.source || '—' %> &middot; akun <%= ev.account || '—' %> &middot; <%= new Date(ev.occurredAt).toISOString().replace('T', ' ').slice(0, 19) %> UTC</li>
+                <% }) %>
+              </ul>
+              <% } %>
+            </td>
+            <td><span class="sev sev-<%= alert.severity %>"><%= alert.severity.toUpperCase() %></span></td>
+            <td><span class="status-chip"><%= alert.status.toUpperCase() %></span></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </section>
+
+    <section>
+      <h2>D. Pelacakan asal serangan (metadata simulasi)</h2>
+      <% if ((laporan.analysis.origins || []).length === 0) { %>
+        <p style="font-size:12px">Tidak ada metadata alamat sumber pada insiden ini.</p>
+      <% } else { %>
+        <% laporan.analysis.origins.forEach((origin) => { %>
+        <div class="origin">
+          <code><%= origin.ip || '—' %></code>
+          <% if (origin.kind === 'internal') { %><small> &middot; [INTERNAL]</small><% } %>
+          <% if (origin.vpn) { %><small> &middot; [VPN]</small><% } %>
+          <% if (origin.tor) { %><small> &middot; [TOR]</small><% } %>
+          <% if (origin.proxy) { %><small> &middot; [PROXY]</small><% } %>
+          <div style="margin-top:4px"><strong><%= origin.apparentLocation || 'Tidak diketahui' %></strong><% if (origin.asn || origin.provider) { %> <small><%= [origin.asn, origin.provider].filter(Boolean).join(' · ') %></small><% } %></div>
+          <div style="margin-top:3px"><span class="conf"><i style="width:<%= Math.max(0, Math.min(100, Number(origin.confidence) || 0)) %>%"></i></span><small><%= Math.max(0, Math.min(100, Number(origin.confidence) || 0)) %>% keyakinan lokasi tampak</small></div>
+          <p class="note"><%= origin.note || '' %></p>
+        </div>
+        <% }) %>
+        <p class="note"><em><%= laporan.analysis.attribution %></em> Pelacakan berbasis metadata koneksi pada data demo; alamat asli di belakang VPN/Tor tidak dapat dipastikan tanpa data tambahan.</p>
+      <% } %>
+    </section>
+
+    <section>
+      <h2>E. Playbook respons yang tercatat</h2>
+      <ol class="objects">
+        <% (laporan.record.responses || []).forEach((step) => { %><li><%= step %></li><% }) %>
+      </ol>
+    </section>
+
+    <section>
+      <h2>F. Jejak audit penanganan</h2>
+      <% if (laporan.audit.length === 0) { %>
+        <p style="font-size:12px">Belum ada perubahan status alert yang dicatat untuk insiden ini.</p>
+      <% } else { %>
+      <table>
+        <thead><tr><th style="width:170px">Waktu</th><th style="width:130px">Aktor</th><th>Aksi</th><th>Alert terkait</th></tr></thead>
+        <tbody>
+          <% laporan.audit.forEach((row) => { %>
+          <tr>
+            <td><%= new Date(row.created_at).toISOString().replace('T', ' ').slice(0, 19) %> UTC</td>
+            <td><%= row.actor %></td>
+            <td><code style="font-family:Consolas,monospace"><%= row.action %></code></td>
+            <td><%= row.alert_title %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </section>
+
+    <section>
+      <h2>G. Pengesahan</h2>
+      <div class="sign-grid">
+        <div class="sign">Disusun oleh<div class="line">Operator demo GARUDA SHIELD</div></div>
+        <div class="sign">Disetujui / mencatat oleh<div class="line">Pimpinan satuan (demo)</div></div>
+      </div>
+    </section>
+
+    <footer>
+      Dokumen dihasilkan lokal oleh purwarupa GARUDA SHIELD (kategori Defensive Shield, Kartika Cyber Hackathon 2026). Seluruh target, event, alert, metrik, koordinat, dan hasil analisis adalah data sintetis untuk demonstrasi — bukan kondisi sistem nyata dan bukan output monitoring produksi. Aplikasi tidak melakukan probe jaringan, pemindaian, pemblokiran, maupun perubahan perangkat.
+    </footer>
+  </article>
+  <% } %>
+</body>
+</html>

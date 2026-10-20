@@ -402,6 +402,7 @@ h1 em { color: var(--green); font-style: normal; font-weight: 500; }
 .ai-button:hover:not(:disabled) { border-color: #81a07e; color: var(--green); }
 .ai-button:disabled { opacity: .45; cursor: not-allowed; }
 .ai-button-recover { border-color: #2f5c40; color: #bdecce; background: #14251b; }
+.ai-button-report { border-color: #2f5c40; color: #bdecce; background: #14251b; text-decoration: none; display: inline-flex; align-items: center; }
 .ai-summary { margin: 0; color: #cfd8cd; font-size: 11px; line-height: 1.7; }
 .ai-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 .ai-col-title { display: block; margin-bottom: 8px; color: #72837a; font-family: var(--mono); font-size: 7px; letter-spacing: .1em; }

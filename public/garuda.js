@@ -419,6 +419,8 @@ function showAiLoading(attack) {
   if (originNote) originNote.textContent = 'Melacak asal koneksi dari metadata simulasi…';
   const recoverButton = document.querySelector('#ai-recover');
   if (recoverButton) recoverButton.disabled = true;
+  const reportLink = document.querySelector('#ai-report');
+  if (reportLink) reportLink.hidden = true;
   const runButton = document.querySelector('#ai-run');
   if (runButton) runButton.disabled = true;
 }
@@ -483,6 +485,11 @@ function renderAi(analysis, attack) {
 
   const recoverButton = document.querySelector('#ai-recover');
   if (recoverButton) recoverButton.disabled = analysis.recovered;
+  const reportLink = document.querySelector('#ai-report');
+  if (reportLink && attack.id) {
+    reportLink.href = `/laporan/${encodeURIComponent(attack.id)}`;
+    reportLink.hidden = false;
+  }
   const runButton = document.querySelector('#ai-run');
   if (runButton) runButton.disabled = false;
 

@@ -14,6 +14,7 @@ try {
 const { kodamSites } = require('./kodam-sites');
 const {
   getAlertsByIds,
+  getAuditByAlertIds,
   getDashboardData,
   insertEvent,
   refreshAlerts,
@@ -401,6 +402,34 @@ app.post('/api/analisis', async (request, response) => {
 
   analysisCache.set(attackId, result);
   return response.json(result);
+});
+
+app.get('/laporan/:attackId', (request, response) => {
+  const attackId = request.params.attackId;
+  const record = recentAttacks.get(attackId);
+  if (!record) {
+    return response.status(404).render('laporan', { laporan: null });
+  }
+
+  const cached = analysisCache.get(attackId);
+  const analysis = cached
+    ? { model: cached.model, source: cached.source, status: cached.status, recovered: cached.recovered, severity: cached.severity, confidence: cached.confidence, summary: cached.summary, actions: cached.actions, attribution: cached.attribution, origins: cached.origins, note: cached.note }
+    : { ...analyzeLocally(record), model: 'heuristik-lokal', origins: trackSources(record.sources), note: '', attribution: '' };
+
+  const alerts = getAlertsByIds(record.detections.map((detection) => detection.id));
+  const audit = getAuditByAlertIds(alerts.map((alert) => alert.id));
+  const reportCode = `LPR/${new Date().toISOString().slice(0, 10).replaceAll('-', '')}/${attackId.slice(0, 8).toUpperCase()}`;
+
+  return response.render('laporan', {
+    laporan: {
+      record,
+      analysis,
+      alerts,
+      audit,
+      reportCode,
+      createdAt: new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(record.createdAt))
+    }
+  });
 });
 
 app.listen(port, '127.0.0.1', () => {

@@ -38,7 +38,7 @@ Durasi sasaran: 3-4 menit. Jalankan aplikasi lokal sebelum merekam: `npm start`,
 
 ### 4. Tinjau alert dan tindak lanjut - 60 detik
 
-**Layar:** Tunjukkan alert baru, severity, bukti, dan rekomendasi. Ubah status alert lalu tunjukkan audit trail. Jika waktu cukup, tunjukkan ringkasan analisis insiden.
+**Layar:** Tunjukkan alert baru, severity, bukti, dan rekomendasi. Ubah status alert lalu tunjukkan audit trail. Jika waktu cukup, tunjukkan ringkasan analisis insiden. Sebagai penutup, klik **Cetak laporan** di panel AI: halaman laporan insiden dari operator ke pimpinan terbuka dan siap disimpan sebagai PDF lewat dialog print browser — tunjukkan stempel mode demo dan bagian pengesahan di bawahnya.
 
 **Narasi:**
 
