@@ -14,10 +14,10 @@ Status tanggal: 20 Oktober 2026. Tandai kotak saat tugas selesai.
 
 - [ ] Catat insight dari webinar pembekalan pertama (19 Oktober; tanggal ini sudah lewat per 20 Oktober).
 - [ ] Ikuti webinar pembekalan kedua pada 27 Oktober.
-- [ ] Pastikan ruang lingkup solusi sesuai kategori Defensive Shield dan kebutuhan pengamanan IT/OT.
-- [ ] Selesaikan purwarupa dan pastikan dapat dijalankan untuk demo.
-- [ ] Uji alur utama dan siapkan data/demo yang dapat diulang.
-- [ ] Pastikan demonstrasi hanya menggunakan target dan data sintetis, bukan sistem nyata.
+- [v] Pastikan ruang lingkup solusi sesuai kategori Defensive Shield dan kebutuhan pengamanan IT/OT.
+- [v] Selesaikan purwarupa dan pastikan dapat dijalankan untuk demo (dashboard, konsol, rule engine, panel AI, laporan insiden siap cetak).
+- [v] Uji alur utama dan siapkan data/demo yang dapat diulang (test otomatis 5/5 `npm test`; E2E browser konsol anggarkan ke dashboard, analisis, pulihkan, laporan PDF).
+- [v] Pastikan demonstrasi hanya menggunakan target dan data sintetis, bukan sistem nyata.
 - [v] Jalankan `npm start`; server berhasil berjalan di `http://localhost:3000`.
 
 ## Materi submission
@@ -28,7 +28,7 @@ Status berkas di repository: proposal, dokumentasi teknis, naskah demo, dan draf
 - [v] Dokumentasi teknis: `docs/technical.md`.
 - [v] Naskah video demo: `docs/demo-script.md`.
 - [v] Draft isi slide dan catatan pembicara: `docs/presentation-slides.md` (belum diekspor ke PDF/PPTX).
-- [ ] Tautan repository/project yang dapat diakses juri; `link_lomba.txt` saat ini hanya berisi tautan situs acara.
+- [v] Tautan repository/project yang dapat diakses juri: https://github.com/Basuki-rahmat/kartika-cyber (branch `master`, README dengan cuplikan layar; perlu dipastikan repo dibuat publik sebelum submission).
 - [ ] Rekam dan unggah video demo purwarupa.
 - [ ] Ekspor/siapkan slide final dan unggah sesuai format yang diminta.
 - [ ] Rekam video presentasi jika memang diwajibkan penyelenggara.

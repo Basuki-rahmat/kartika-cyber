@@ -35,7 +35,7 @@ Ini adalah masalah yang menjadi inspirasi purwarupa, bukan klaim bahwa aplikasi 
 - Dashboard peta lokal untuk gambaran inventory endpoint dummy.
 - Konsol untuk menghasilkan skenario event sintetis.
 - Rule engine yang mengubah pola event menjadi alert dengan severity, bukti, dan rekomendasi.
-- Audit status dan analisis insiden lokal untuk mendukung alur demo.
+- Audit status, analisis insiden lokal, dan laporan insiden siap cetak (operator ke pimpinan) untuk mendukung alur demo.
 
 **Catatan pembicara:**
 
@@ -63,10 +63,12 @@ Semua langkah berlangsung di aplikasi lokal. Tidak ada trafik serangan atau prob
 - Pencarian, filter status, dan detail endpoint.
 - Lima skenario konsol: Smart IDS/IPS, Threat Intelligence Platform, Automated Incident Response, Zero-Day Detection, Encryption Tool.
 - Alert berisi severity, bukti, rekomendasi, serta status.
+- Panel AI penanganan insiden dengan checklist pemulihan dan pelacakan asal serangan.
+- Laporan insiden siap cetak (`/laporan/:attackId`) — dicetak atau disimpan PDF langsung dari browser.
 
 **Catatan pembicara:**
 
-Demo langsung: buka peta, pilih endpoint; pindah ke konsol, pilih target dan Automated Incident Response; jalankan simulasi; kembali ke dashboard untuk membaca alert. Akhiri dengan pembaruan status/audit.
+Demo langsung: buka peta, pilih endpoint; pindah ke konsol, pilih target dan Automated Incident Response; jalankan simulasi; kembali ke dashboard untuk membaca alert. Akhiri dengan pembaruan status/audit, lalu klik "Cetak laporan" di panel AI untuk memperlihatkan laporan operator ke pimpinan yang siap disimpan sebagai PDF.
 
 ---
 
@@ -96,12 +98,13 @@ Nyatakan batasan dengan jelas. Hasil lokasi sumber dan analisis bukan intelijen 
 
 ---
 
-## Slide 8 - Nilai dan Langkah Berikutnya
+## Slide 8 - Kelayakan dan Langkah Berikutnya
 
-- Nilai demo: alur event ke alert dan tindak lanjut lebih mudah diperagakan.
+- Kelayakan: satu proses Node.js + SQLite bawaan; peta offline; berjalan di jaringan tertutup tanpa layanan cloud.
+- Nilai demo: alur event ke alert, tindak lanjut, dan laporan insiden lebih mudah diperagakan.
 - Langkah berikutnya: validasi kebutuhan, otorisasi pemilik aset, data tervalidasi, kontrol akses, audit, dan uji terisolasi.
 - GARUDA SHIELD adalah titik awal diskusi, bukan integrasi produksi.
 
 **Catatan pembicara:**
 
-Tutup dengan manfaat purwarupa dan syarat yang diperlukan sebelum integrasi nyata. Hindari menjanjikan kesiapan operasional.
+Tutup dengan manfaat purwarupa, kelayakan implementasinya, dan syarat yang diperlukan sebelum integrasi nyata. Hindari menjanjikan kesiapan operasional.
