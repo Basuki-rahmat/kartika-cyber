@@ -12,16 +12,21 @@ GARUDA SHIELD adalah demonstrator yang memperlihatkan alur *event → deteksi �
 
 | Modul | Penjelasan |
 |---|---|
-| **Dashboard peta situasi** | 16 endpoint dummy (15 Kodam + 1 Nusantara) pada peta vektor Indonesia yang disajikan lokal — tanpa tile internet, tanpa server pihak ketiga. |
+| **Dashboard peta situasi** | 16 endpoint dummy (15 Kodam + 1 Nusantara) pada peta vektor Indonesia yang disajikan lokal — tanpa tile internet, tanpa server pihak ketiga. Sidebar inventaris dapat diciutkan untuk memperluas peta (tombol di kaki rail). |
 | **Inventaris situs** | Pencarian, filter status (Normal / Perhatian / Offline / Maintenance), detail endpoint: latensi, uptime simulasi, URL `.test`, tautan situs dummy. |
 | **Simulasi pemeriksaan situs** | Tabel pemeriksaan per endpoint (respons, TLS, latensi, kehilangan paket, kondisi) yang berjalan lokal tanpa request jaringan. |
-| **Konsol Red Team** | 5 modul pertahanan diuji: Smart IDS/IPS, Threat Intelligence Platform, Automated Incident Response, Zero-Day Detection, Encryption Tool. Serangan dibuat sebagai event sintetis — tidak ada paket ke target. |
+| **Situs dummy interaktif** | Setiap situs (`/situs-dummy/:siteId`) punya halaman portal yang utuh: banner Kartika Cyber, hero, layanan, kabar simulasi, panel status endpoint, kontak — tema terang/gelap, semuanya data fiktif. |
+| **Konsol Red Team + profil asal** | 5 modul pertahanan diuji: Smart IDS/IPS, Threat Intelligence Platform, Automated Incident Response, Zero-Day Detection, Encryption Tool. Panel "03 / ASAL PENYERANG" mensimulasikan IP asal, lokasi tampak, ISP, penanda VPN/Tor — serangan dibuat sebagai event sintetis, tidak ada paket ke target. |
+| **Mode dampak serangan di situs dummy** | Situs yang diserang langsung memasuki mode *dirender* secara live: konten asli disamarkan (grayscale + blur), muncul layar penuh "KONTEN SITUS DISEGEL" berisi vektor serangan, jumlah event, dan asal penyerang (dengan penanda VPN/Tor); setelah pulih, efek hilang dan halaman kembali normal. Terpantau lewat render server pada `GET /situs-dummy/:siteId` dan polling `GET /api/insiden-aktif` (3 detik). |
+| **Alarm insiden audio** | Sirine serangan udara mengulang saat insiden aktif (dapat dibisukan lewat tombol ALARM) — memutar file sirine lokal, fallback nada Web Audio jika autoplay diblokir browser. |
 | **Rule engine deteksi** | Lonjakan login gagal (AUTH-001), koneksi IT→OT tanpa persetujuan (NET-004), tulis OT di luar jadwal (OT-007), pola pemindaian port (IDS-001), indikator ancaman (TIP-002), rantai serangan multi tahap (AIR-003), aktor tak dikenal (ZDD-004), eksfiltrasi terenkripsi (ENC-005). |
-| **Panel AI penanganan insiden** | Analisis heuristik lokal (default) — status Aman/Butuh Tindakan, keyakinan, ringkasan, tindakan disarankan, checklist pemulihan, dan pelacakan asal serangan berbasis metadata. Integrasi Groq (opsional) untuk ringkasan insiden. |
-| **Laporan insiden siap cetak** | Halaman `GET /laporan/:attackId` yang menyusun laporan dari operator ke pimpinan: identitas target & metode, penilaian, ringkasan analisis + tindakan yang direkomendasikan, tabel alert beserta status tindak lanjut, pelacakan asal serangan, playbook respons, jejak audit penanganan, dan bagian pengesahan dua tanda tangan — lengkap dengan stempel "SELURUH DATA SIMULASI" pada kop dan disclaimer di footer. Dicetak atau disimpan sebagai PDF langsung lewat dialog print browser (Ctrl+P), tanpa dependensi tambahan. |
-| **Audit & pemulihan** | Perubahan status alert tercatat di audit trail lokal; tombol "Pulihkan situs" menuntaskan insiden simulasi dan menghentikan alarm/animasi. |
+| **Panel AI penanganan insiden** | Analisis heuristik lokal (default) — status Aman/Butuh Tindakan, keyakinan, ringkasan, tindakan disarankan, checklist pemulihan, dan pelacakan asal serangan berbasis metadata. Tahapan kerja AI tampil beranimasi; analisis hanyalah penilaian, pemulihan tetap dikendalikan operator melalui tombol "Pulihkan situs". Integrasi Groq (opsional). |
+| **Laporan insiden siap cetak** | Halaman `/laporan/:attackId` menyusun laporan operator → pimpinan, 9 bagian A–I: ringkasan insiden (A), analisis operator + tindakan (B), deteksi & status tindak lanjut (C), pelacakan asal serangan (D), playbook respons (E), **konteks jaringan: seluruh 16 situs Kodam dengan target ditandai (F)**, **riwayat serangan dalam sesi (G)**, jejak audit (H), pengesahan dua tanda tangan (I) — stempel "SELURUH DATA SIMULASI" pada kop, disclaimer di footer, serta tombol Cetak/Simpan PDF (Ctrl+P) tanpa dependensi tambahan. |
+| **Audit & pemulihan** | Perubahan status alert tercatat di audit trail lokal; tombol "Pulihkan situs" mengeksekusi playbook langkah demi langkah, menuntaskan insiden, dan menghentikan alarm/animasi + mode dampak. |
 
 ## Cuplikan Layar
+
+> **Catatan bagi penjaga repositori:** gambar `karya/6.png`, `karya/7.png`, dan `karya/8.png` belum dikumpulkan (todo). Jalankan demo, ambil tangkapan layar sesuai urutan babak di bawah, dan simpan dengan nama file itu agar ilustrasi lengkap.
 
 ### 1. Dashboard Peta Situasi — gambaran menyeluruh seluruh wilayah
 
@@ -51,13 +56,31 @@ Tabel pemeriksaan menampilkan kondisi tiap endpoint: kode + kota, badge respons 
 
 ![Dashboard menerima insiden serangan](karya/5.png)
 
-Saat serangan diluncurkan, dashboard memantau, memarahi: penanda merah muncul tepat di koordinat target (XVII/Cenderawasih) dengan cincin denyut beranimasi; popup kutip detail: **OT-007** (KRITIS) perintah tulis OT di luar jadwal, **AIR-003** (KRITIS) rantai serangan multi tahap, **NET-004** (SEDANG) koneksi IT→OT tanpa zona IT ke OT; plus aksi playbook (isolasi segmen OT, cabut sesi, dokumentasi insiden). Tautan detail di kiri ikon seperti gambar sisipan serangan muncul juga di peta; panel AI beralih ke **BUTUH TINDAKAN** (keyakinan 85%) beserta tindakan dan status pemulihan. Alarm audio, tautan "Situs dummy target", dan tombol "Pulihkan situs" menuntaskan alur end-to-end. Tombol **Cetak laporan ↗** di panel AI membuka laporan insiden operator→pimpinan yang utuh dan siap disimpan sebagai PDF — memenuhi kebutuhan pelaporan dari operator lapangan ke pimpinan satuan dalam satu klik.
+Saat serangan dilancarkan dari `/konsol`, dashboard memantau langsung: penanda merah muncul tepat di koordinat target dengan cincin denyut beranimasi; popup merangkum alert terpicu (mis. **OT-007** KRITIS, **AIR-003** KRITIS, **NET-004** SEDANG) lengkap dengan rekomendasi playbook; panel AI beralih ke **BUTUH TINDAKAN** dengan keyakinan, tindakan disarankan, dan status pemulihan; alarm sirine aktif; tombol **Cetak laporan ↗** membuka laporan insiden siap PDF. Pita merah "SIMULASI DEFENSIF" tetap menjelaskan bahwa seluruh serangan tidak pernah meninggalkan aplikasi.
+
+### 6. Situs dummy dalam keadaan normal — portal yang utuh
+
+![Situs dummy normal](karya/6.png)
+
+Contoh: `http://localhost:3000/situs-dummy/kodam-jaya`. Halaman portal fiktif yang layak dipandang: banner KARTIKA CYBER 2026 di atas, breadcrumb ke dashboard, badge status endpoint, hero nama Kodam + fakta demo (kode wilayah, koordinat, probe terakhir), kartu statistik (uptime, latensi, layanan, kunjungan 24 jam), avis "DEMO ONLY" yang tegas menyatakan data fiktif, layanan cepat, daftar kabar simulasi dengan pencarian + filter, panel status endpoint (URL `.test`, HTTP, latensi), navigasi, dan kontak. Pita merah "LINGKUNGAN SIMULASI · BUKAN SITUS RESMI" selalu tampil paling atas. Tema terang/gelap tersedia via tombol bulan/matahari.
+
+### 7. Situs dummy terdampak serangan — mode dirender
+
+![Situs dummy terdampak serangan](karya/7.png)
+
+Begitu insiden aktif menargetkan situs tersebut (atau dilihat setelah serangan diluncurkan dari konsol), halaman berubah dramatis tanpa reload: konten portal digelapkan (grayscale + blur), layar penuh merah krisis menampilkan judul "KONTEN SITUS DISEGEL — OLEH GARUDA SHIELD RESPONSE", pita peringatan bergerak, dan fakta serangan: **VEKTOR** (nama metode), **KATEGORI**, **JUMLAH EVENT** terekam, **ASAL SERANGAN** (lokasi tampak + ISP + flag VPN/TOR). Tombol "Lihat insiden ↗" menjembatani ke dashboard. Pita meramaikan tetap menyatakan LINGKUNGAN SIMULASI — dampak ini murni datar visual demo, bukan defacement.
+
+### 8. Pemulihan dan laporan insiden — dari operator ke pimpinan
+
+![Laporan insiden lengkap](karya/8.png)
+
+Operator menekan **Pulihkan situs** di panel AI: langkah playbook tercentang satu per satu (isolasi, pembersihan, verifikasi, pemantauan, dokumentasi), status berubah ke **AMAN · SITUS PULIH**, alarm berhenti, dan halaman situs dummy kembali normal dengan toast "Situs web dipulihkan". Laporan (`/laporan/:attackId`) lalu menyusun dokumen resmi 9 bagian: ringkasan insiden, analisis operator + tindakan yang direkomendasikan, tabel alert + bukti event, pelacakan asal serangan dengan bilah keyakinan, playbook respons, **konteks jaringan seluruh 16 situs Kodam** (target ditandai chip TARGET), **riwayat serangan dalam sesi**, jejak audit penanganan, dan pengesahan dua tanda tangan — siap disimpan sebagai PDF via Ctrl+P untuk lampiran pimpinan.
 
 ---
 
 ## Cara Menjalankan
 
-Persyaratan: **Node.js 22.5+** (memakai modul SQLite bawaan `node:sqlite`).
+Persyaratan: **Node.js 22.13+** (memakai modul SQLite bawaan `node:sqlite`; versi minimal ini penting agar modul tidak lagi dianggap eksperimental).
 
 ```powershell
 npm install     # paket: express 5 + ejs
@@ -71,13 +94,13 @@ Server mengikat ke `127.0.0.1:3000` (atur `PORT` bila port 3000 terpakai).
 |---|---|
 | `GET /` | Dashboard peta, KPI, alert, audit, tabel pemeriksaan. |
 | `GET /konsol` | Konsol tim penyerang (simulasi). |
-| `GET /situs-dummy/:siteId` | Detail situs dummy (domain `.test`). |
-| `POST /api/serangan` | Jalankan metode simulasi, simpan event, kembalikan deteksi. |
+| `GET /situs-dummy/:siteId` | Detail situs dummy (domain `.test`) — memasuki mode dampak bila insiden untuk situs itu sedang aktif. |
+| `POST /api/serangan` | Jalankan metode simulasi (lengkap dengan profil asal penyerang opsional), simpan event, kembalikan deteksi + tautan situs target. |
 | `POST /api/events` | Ingest satu event standar (login, koneksi, protocol_write, dll). |
 | `GET /api/insiden-aktif` · `GET /api/serangan/:id` | Baca insiden simulasi. |
 | `POST /api/analisis` | Analisis insiden — heuristik lokal atau Groq (opsional). |
 | `POST /api/pulihkan` | Tandai insiden pulih. |
-| `GET /laporan/:attackId` | Laporan insiden siap cetak (operator ke pimpinan; print browser untuk PDF). |
+| `GET /laporan/:attackId` | Laporan insiden 9 bagian A–I siap cetak (operator ke pimpinan; print browser untuk PDF). |
 | `POST /alerts/:id/status` · `POST /demo/reset` | Ubah status alert / reset data demo. |
 
 Opsional: set `GROQ_API_KEY` (+ `GROQ_MODEL`) di `.env` untuk mengaktifkan analisis via Groq; tanpa environment variable, aplikasi tetap berjalan penuh memakai heuristik lokal.
@@ -88,7 +111,8 @@ Opsional: set `GROQ_API_KEY` (+ `GROQ_MODEL`) di `.env` untuk mengaktifkan anali
 src/              server Express 5 (server.js), SQLite via node:sqlite (db.js),
                   rule engine (detector.js), skenario konsol (threats.js),
                   pelacakan asal simulasi (geoip.js), data situs (kodam-sites.js), views EJS
-public/           CSS/JS per halaman, Leaflet vendored, GeoJSON provinsi, suara alarm
+public/           CSS/JS per halaman, Leaflet vendored, GeoJSON provinsi, suara alarm,
+                  thumbnail situs (public/thumbs) + generator scripts/make-thumbs.js
 data/             demo-events.json (seed) + SQLite lokal (dibuat otomatis, jangan dibagikan)
 test/             pengujian rule engine dan konsistensi inventory (node --test)
 docs/             proposal, dokumentasi teknis, naskah demo, slide, ceklist
@@ -100,5 +124,7 @@ docs/             proposal, dokumentasi teknis, naskah demo, slide, ceklist
 - Bukan layanan monitoring produksi; tidak melakukan DNS lookup, HTTP probe, pemindaian, pemblokiran, atau perubahan perangkat/jaringan.
 - Peta bersifat skematik (batas provinsi data © superpikar), bukan pemetaan operasional.
 - Belum ada autentikasi/otorisasi produksi — **jangan dibuka ke jaringan publik**; jangan memasukkan data operasional atau rahasia.
+- Mode dampak serangan merupakan efek visual demo; pita "LINGKUNGAN SIMULASI" selalu tampil agar konten tidak dikira defacement nyata.
+- Sirine alarm: "Air Raid Siren" oleh orangefreesounds.com, lisensi **CC BY 4.0** — atribusi tercantum pada komentar elemen audio di `src/views/index.ejs`.
 
 Dokumen pendukung lengkap ada di [`docs/`](docs/): [proposal.md](docs/proposal.md), [technical.md](docs/technical.md), [demo-script.md](docs/demo-script.md), [presentation-slides.md](docs/presentation-slides.md), [ceklist.md](docs/ceklist.md).
