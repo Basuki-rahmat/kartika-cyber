@@ -1,8 +1,0 @@
-https://kartikacyberhackathon.id/
-
-Tantangan & Konteks Keamanan Siber IT/OT” sebagai bekal bagi peserta untuk memahami tantangan keamanan siber di lingkungan teknologi informasi dan operasional.
-
-tahapan ada pada folder /tahapan lomba
-
-bangun app dengan node.js 
-fokus pada kategori penangkalan
