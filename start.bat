@@ -6,7 +6,7 @@ echo.
 echo   GARUDA SHIELD menyala...
 echo   Dashboard  : http://localhost:3000/
 echo   Konsol     : http://localhost:3000/konsol
-echo   Stop       : tekan Ctrl+C di jendela ini
+echo   Stop       : jalankan stop.bat (atau Ctrl+C di jendela ini, lalu tekan Y)
 echo.
 node src/server.js
 pause
