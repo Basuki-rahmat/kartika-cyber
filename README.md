@@ -18,6 +18,7 @@ GARUDA SHIELD adalah demonstrator yang memperlihatkan alur *event → deteksi �
 | **Konsol Red Team** | 5 modul pertahanan diuji: Smart IDS/IPS, Threat Intelligence Platform, Automated Incident Response, Zero-Day Detection, Encryption Tool. Serangan dibuat sebagai event sintetis — tidak ada paket ke target. |
 | **Rule engine deteksi** | Lonjakan login gagal (AUTH-001), koneksi IT→OT tanpa persetujuan (NET-004), tulis OT di luar jadwal (OT-007), pola pemindaian port (IDS-001), indikator ancaman (TIP-002), rantai serangan multi tahap (AIR-003), aktor tak dikenal (ZDD-004), eksfiltrasi terenkripsi (ENC-005). |
 | **Panel AI penanganan insiden** | Analisis heuristik lokal (default) — status Aman/Butuh Tindakan, keyakinan, ringkasan, tindakan disarankan, checklist pemulihan, dan pelacakan asal serangan berbasis metadata. Integrasi Groq (opsional) untuk ringkasan insiden. |
+| **Laporan insiden siap cetak** | Halaman `GET /laporan/:attackId` yang menyusun laporan dari operator ke pimpinan: identitas target & metode, penilaian, ringkasan analisis + tindakan yang direkomendasikan, tabel alert beserta status tindak lanjut, pelacakan asal serangan, playbook respons, jejak audit penanganan, dan bagian pengesahan dua tanda tangan — lengkap dengan stempel "SELURUH DATA SIMULASI" pada kop dan disclaimer di footer. Dicetak atau disimpan sebagai PDF langsung lewat dialog print browser (Ctrl+P), tanpa dependensi tambahan. |
 | **Audit & pemulihan** | Perubahan status alert tercatat di audit trail lokal; tombol "Pulihkan situs" menuntaskan insiden simulasi dan menghentikan alarm/animasi. |
 
 ## Cuplikan Layar
@@ -50,7 +51,7 @@ Tabel pemeriksaan menampilkan kondisi tiap endpoint: kode + kota, badge respons 
 
 ![Dashboard menerima insiden serangan](karya/5.png)
 
-Saat serangan diluncurkan, dashboard memantau, memarahi: penanda merah muncul tepat di koordinat target (XVII/Cenderawasih) dengan cincin denyut beranimasi; popup kutip detail: **OT-007** (KRITIS) perintah tulis OT di luar jadwal, **AIR-003** (KRITIS) rantai serangan multi tahap, **NET-004** (SEDANG) koneksi IT→OT tanpa zona IT ke OT; plus aksi playbook (isolasi segmen OT, cabut sesi, dokumentasi insiden). Tautan detail di kiri ikon seperti gambar sisipan serangan muncul juga di peta; panel AI beralih ke **BUTUH TINDAKAN** (keyakinan 85%) beserta tindakan dan status pemulihan. Alarm audio, tautan "Situs dummy target", dan tombol "Pulihkan situs" menuntaskan alur end-to-end.
+Saat serangan diluncurkan, dashboard memantau, memarahi: penanda merah muncul tepat di koordinat target (XVII/Cenderawasih) dengan cincin denyut beranimasi; popup kutip detail: **OT-007** (KRITIS) perintah tulis OT di luar jadwal, **AIR-003** (KRITIS) rantai serangan multi tahap, **NET-004** (SEDANG) koneksi IT→OT tanpa zona IT ke OT; plus aksi playbook (isolasi segmen OT, cabut sesi, dokumentasi insiden). Tautan detail di kiri ikon seperti gambar sisipan serangan muncul juga di peta; panel AI beralih ke **BUTUH TINDAKAN** (keyakinan 85%) beserta tindakan dan status pemulihan. Alarm audio, tautan "Situs dummy target", dan tombol "Pulihkan situs" menuntaskan alur end-to-end. Tombol **Cetak laporan ↗** di panel AI membuka laporan insiden operator→pimpinan yang utuh dan siap disimpan sebagai PDF — memenuhi kebutuhan pelaporan dari operator lapangan ke pimpinan satuan dalam satu klik.
 
 ---
 
@@ -76,6 +77,7 @@ Server mengikat ke `127.0.0.1:3000` (atur `PORT` bila port 3000 terpakai).
 | `GET /api/insiden-aktif` · `GET /api/serangan/:id` | Baca insiden simulasi. |
 | `POST /api/analisis` | Analisis insiden — heuristik lokal atau Groq (opsional). |
 | `POST /api/pulihkan` | Tandai insiden pulih. |
+| `GET /laporan/:attackId` | Laporan insiden siap cetak (operator ke pimpinan; print browser untuk PDF). |
 | `POST /alerts/:id/status` · `POST /demo/reset` | Ubah status alert / reset data demo. |
 
 Opsional: set `GROQ_API_KEY` (+ `GROQ_MODEL`) di `.env` untuk mengaktifkan analisis via Groq; tanpa environment variable, aplikasi tetap berjalan penuh memakai heuristik lokal.
