@@ -1,0 +1,13 @@
+[
+  { "id": "demo-001", "assetId": "IT-WS-14", "zone": "IT", "eventType": "login_success", "source": "10.20.4.18", "account": "operator.rina", "minutesAgo": 2 },
+  { "id": "demo-002", "assetId": "IT-WS-08", "zone": "IT", "eventType": "login_failed", "source": "10.20.2.91", "account": "operator.dimas", "minutesAgo": 7 },
+  { "id": "demo-003", "assetId": "IT-WS-08", "zone": "IT", "eventType": "login_failed", "source": "10.20.2.91", "account": "operator.dimas", "minutesAgo": 6 },
+  { "id": "demo-004", "assetId": "IT-WS-08", "zone": "IT", "eventType": "login_failed", "source": "10.20.2.91", "account": "operator.dimas", "minutesAgo": 5 },
+  { "id": "demo-005", "assetId": "IT-WS-08", "zone": "IT", "eventType": "login_failed", "source": "10.20.2.91", "account": "operator.dimas", "minutesAgo": 4 },
+  { "id": "demo-006", "assetId": "IT-WS-08", "zone": "IT", "eventType": "login_failed", "source": "10.20.2.91", "account": "operator.dimas", "minutesAgo": 3 },
+  { "id": "demo-007", "assetId": "OT-HMI-02", "zone": "OT", "eventType": "connection_open", "source": "10.20.6.35", "sourceZone": "IT", "targetZone": "OT", "approved": false, "minutesAgo": 11 },
+  { "id": "demo-008", "assetId": "OT-PLC-03", "zone": "OT", "eventType": "protocol_write", "source": "10.20.6.35", "account": "svc-maint", "inMaintenanceWindow": false, "minutesAgo": 18 },
+  { "id": "demo-009", "assetId": "OT-SENSOR-12", "zone": "OT", "eventType": "telemetry_read", "source": "10.20.6.12", "minutesAgo": 24 },
+  { "id": "demo-010", "assetId": "IT-SRV-02", "zone": "IT", "eventType": "backup_complete", "source": "10.20.1.22", "minutesAgo": 32 },
+  { "id": "demo-011", "assetId": "OT-PLC-01", "zone": "OT", "eventType": "heartbeat", "source": "10.20.6.11", "minutesAgo": 38 }
+]

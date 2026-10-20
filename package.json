@@ -1,0 +1,18 @@
+{
+  "name": "garuda-shield",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GARUDA SHIELD - Purwarupa kategori Defensive Shield: dashboard peta dan konsol simulasi untuk deteksi serta tindak lanjut insiden IT/OT (data demo lokal)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}

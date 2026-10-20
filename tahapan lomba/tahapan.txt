@@ -1,0 +1,174 @@
+KARTIKA CYBER HACKATHON 2026
+Hackathon nasional dari Pusat Siber Angkatan Darat (PUSSIBERAD) dan CODEPOLITAN dalam rangka memperingati Hari Juang Kartika 2026. Terbuka untuk developer, praktisi keamanan siber, mahasiswa, dan penggiat teknologi di seluruh Indonesia. Gratis.
+
+// KENAPA HARUS IKUT
+
+Semua peserta dapat benefit. Finalis dapat lebih.
+Kamu tidak perlu latar belakang militer untuk ikut. Cukup bawa kemampuan coding dan ide kamu. Kerjakan online selama 4 minggu, lalu 10 tim terbaik presentasi langsung di Jakarta.
+
+SEMUA PESERTA
+Cukup submit karya, kamu sudah dapat ini
+- Sertifikat digital resmi sebagai peserta hackathon dari PUSSIBERAD dan CODEPOLITAN
+- Akses 2 webinar pembekalan teknis gratis
+- Pengalaman membangun solusi untuk kebutuhan pertahanan siber nyata
+- Akses lifetime kelas online Vibe Coding for Beginner - Ngoding dengan AI!
+- Akses lifetime kelas online Membangun Personal Asisten Menggunakan OpenClaw
+- Akses lifetime kelas online White-hat Hacker Essentials
+
+10 TIM FINALIS
+Masuk 10 besar, ini yang menunggu kamu
+- Undangan ke acara final dan conference di Hotel Aston Kartika, Jakarta
+- Ikut menyaksikan langsung keynote speaker dan talkshow bersama praktisi industri di hari final
+- Paket Langganan CODEPOLITAN untuk akses belajar 172+ kelas online selama 6 bulan
+- Sertifikat finalis Kartika Cyber Hackathon dari PUSSIBERAD dan CODEPOLITAN
+- Subsidi transportasi Rp 500.000 per tim (diberikan saat hadir di venue pada hari acara)
+- Voucher diskon Bootcamp Ethical Hacking dan Vibe Coding
+
+// KATEGORI
+
+Pilih kategori yang paling cocok dengan skill kamu.
+Tidak terbatas pada contoh di bawah. Kamu bebas membangun apa saja, software, dashboard, bot, framework, bahkan hardware, selama relevan dengan salah satu kategori.
+
+01 OFFENSIVE TECH
+Penindakan
+Solusi ofensif untuk pengujian kerentanan sistem atau mendukung operasi siber aktif.
+CONTOH
+- Vulnerability Exploitation Tool
+- Payload Generator
+- Malware Analysis Sandbox
+- Red Team Automation
+- AI-assisted Target Profiling
+
+02 DEFENSIVE SHIELD
+Penangkalan
+Teknologi untuk mendeteksi, mencegah, dan merespons ancaman siber sebelum atau saat terjadi.
+CONTOH
+- Smart IDS/IPS
+- Threat Intelligence Platform
+- Automated Incident Response
+- Zero-Day Detection
+- Encryption Tool
+
+03 CORE INFRA
+Dukungan Teknologi
+Infrastruktur, platform, atau tooling yang mendukung operasi siber satuan secara menyeluruh.
+CONTOH
+- Cyber Operation Dashboard
+- SIEM Ringan
+- Digital Forensic Toolkit
+- Secure Communication
+- Asset Management System
+
+04 COGNITIVE DOMAIN
+Siber Sosial
+Pemantauan dan analisis ruang siber sosial: deteksi disinformasi, propaganda, buzzer, dan opini publik.
+CONTOH
+- Buzzer/Bot Detection
+- Hoax Classifier
+- Sentiment Analysis Dashboard
+- Social Network Analysis
+- Early Warning Isu Viral
+
+// FORMAT KOMPETISI
+
+Dua babak. Online dulu, lalu final di Jakarta.
+
+BABAK 1
+Penyisihan Online
+4 minggu pengerjaan
+Daftar tim 2-3 orang melalui platform CODEPOLITAN. Tim yang disetujui langsung bisa mulai kerjakan solusi tanpa menunggu peserta lain.
+Yang perlu disubmit:
+- Proposal solusi
+- Dokumentasi teknis
+- Video demo purwarupa
+
+BABAK 2
+Final Offline + Conference
+10 November 2026
+10 tim finalis hadir langsung untuk presentasi dan demo purwarupa di hadapan dewan juri, bersamaan dengan Kartika Cyber Conference yang dihadiri ratusan peserta.
+Hotel Aston Kartika
+Jl. Kyai Tapa No.101, RT.4/RW.16, Tomang, Kec. Grogol petamburan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11440
+Lihat map: https://maps.app.goo.gl/UQ9K7yoaYSzVAVj86
+Yang terjadi di hari final
+- Keynote speaker dan talkshow bersama praktisi industri
+- Presentasi 10 menit per tim di depan dewan juri
+- Pengumuman 3 pemenang dan penyerahan hadiah
+- Doorprize untuk peserta conference
+
+// KRITERIA PENILAIAN
+
+Yang dinilai dewan juri dari solusi kamu.
+Berlaku untuk babak penyisihan (berdasarkan submission) maupun babak final (berdasarkan presentasi dan demo langsung).
+
+25%
+Relevansi dan Manfaat
+Kesesuaian solusi dengan kebutuhan pengamanan IT/OT TNI AD
+
+25%
+Inovasi Teknis
+Keaslian ide dan pendekatan teknologi dalam solusi yang dibangun
+
+25%
+Fungsionalitas Purwarupa
+Solusi bisa berjalan dan didemonstrasikan sesuai rancangan
+
+15%
+Kelayakan Implementasi
+Potensi pengembangan lanjutan dan kemudahan penerapan di lingkungan satuan
+
+10%
+Kualitas Dokumentasi
+Kelengkapan proposal, dokumentasi teknis, dan kejelasan video demo
+
+// CARA DAFTAR
+
+Empat langkah untuk mulai ikut hackathon ini.
+
+01
+Bentuk Tim
+Kumpulkan tim maksimal 3 orang. Pastikan setiap anggota tim sudah memiliki akun di CODEPOLITAN.
+
+02
+Daftarkan Tim & Ajukan Ide
+Ketua tim login ke CODEPOLITAN dan mendaftarkan tim melalui halaman hackathon. Lengkapi formulir pendaftaran: nama tim, data anggota tim, dan ide solusi yang akan dibangun.
+
+03
+Kerjakan Solusi
+Begitu tim terdaftar, langsung kembangkan purwarupa solusi bersama tim selama periode pengerjaan.
+
+04
+Submit Karya
+Siapkan dan submit sebelum batas waktu ditutup:
+- Link karya/project yang bisa diakses
+- Video presentasi
+- Slide penjelasan project
+
+Pendaftaran gratis. Belum punya akun CODEPOLITAN? Daftar dulu di sini: https://www.codepolitan.com/register
+
+// TIMELINE
+
+Rangkaian acara Kartika Cyber Hackathon 2026.
+
+19 Oktober 2026
+Pembukaan & Webinar Pembekalan 1
+Opening ceremony sekaligus sesi pembekalan pertama dari TNI AD tentang konteks keamanan siber IT/OT.
+
+27 Oktober 2026
+Webinar Pembekalan 2
+Sesi pembekalan teknis dari praktisi dan mentor CODEPOLITAN. Peserta yang sudah mengerjakan solusi bisa langsung mengaplikasikan insight dari webinar ini.
+
+15 November 2026
+Batas Akhir Submission
+Deadline pengumpulan karya. Pastikan link project, video presentasi, dan slide penjelasan sudah disubmit.
+
+16 November 2026
+Penjurian Online Dimulai
+Dewan juri mulai menilai seluruh submission untuk menyeleksi 10 tim finalis.
+
+20 November 2026
+Pengumuman Finalis
+10 tim terbaik diumumkan dan diundang ke babak final di Jakarta.
+
+24 November 2026
+Final + Closing Ceremony
+Hackathon final dan conference seharian di Hotel Aston Kartika, Jakarta. Presentasi finalis, keynote speaker, talkshow, dan pengumuman 3 pemenang.

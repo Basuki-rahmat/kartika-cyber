@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="id" data-theme="light" data-status="<%= site ? site.status : 'offline' %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17271f">
+  <title><%= site ? `${site.name} | Portal Simulasi` : 'Situs tidak ditemukan | GARUDA SHIELD' %></title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/dummy-site.css">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('gs-dummy-theme');
+        if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved);
+        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (error) {}
+    })();
+  </script>
+</head>
+<body>
+  <% if (!site) { %>
+    <main class="not-found">
+      <span class="eyebrow">GARUDA SHIELD / SIMULASI</span>
+      <h1>Situs dummy tidak ditemukan</h1>
+      <p>ID situs tidak ada di katalog demonstrasi lokal.</p>
+      <a class="btn btn-primary" href="/">Kembali ke dashboard</a>
+    </main>
+  <% } else { %>
+  <div class="progress-bar" id="progress-bar" aria-hidden="true"></div>
+
+  <div class="demo-ribbon"><span class="ribbon-dot"></span> LINGKUNGAN SIMULASI · BUKAN SITUS RESMI · DATA FIKTIF</div>
+
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a class="site-brand" href="/situs-dummy/<%= site.id %>" aria-label="Beranda situs simulasi">
+        <span class="crest" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 4 42 11v12c0 11-7 18-18 22C13 41 6 34 6 23V11z"/><path d="M14 19h20M17 25h14M20 31h8"/></svg></span>
+        <span class="brand-copy"><strong>PORTAL INFORMASI</strong><small><%= site.name.toUpperCase() %> · SIMULASI</small></span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Navigasi situs simulasi">
+        <a href="#sekitar">Sekilas</a>
+        <a href="#layanan">Layanan</a>
+        <a href="#informasi">Informasi</a>
+        <a href="#kontak">Kontak</a>
+      </nav>
+
+      <div class="header-tools">
+        <span class="header-clock"><span class="clock-label">WAKTU SIM</span><strong id="header-clock">--:--:--</strong></span>
+        <button class="icon-toggle" id="theme-toggle" type="button" aria-label="Ubah tema warna" aria-pressed="false" title="Ubah tema">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/></svg>
+        </button>
+        <a class="ops-link" href="/#sites">GARUDA SHIELD <span aria-hidden="true">↗</span></a>
+        <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Buka navigasi" aria-expanded="false"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="hero-mesh"></div><div class="sun-disc"></div>
+        <svg class="landscape" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice">
+          <path class="ridge ridge-back" d="M0 250 115 186 198 219 306 105 402 194 525 129 612 201 740 96 831 188 956 122 1052 197 1160 102 1285 196 1374 137 1440 179V420H0Z"/>
+          <path class="ridge ridge-mid" d="m0 286 129-73 127 62 120-109 123 101 129-57 111 71 119-112 117 85 128-75 123 85 114-65v221H0Z"/>
+          <path class="ridge ridge-front" d="m0 322 143-65 109 40 138-74 122 81 110-38 118 57 139-86 109 54 131-60 112 58 109-39v190H0Z"/>
+          <path class="field-lines" d="M0 350q180-50 360 8t360-3 360 7 360-12M0 377q180-48 360 7t360-1 360 8 360-14M0 402q180-43 360 4t360 0 360 8 360-12"/>
+        </svg>
+      </div>
+
+      <div class="hero-inner">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">GARUDA SHIELD</a><span>/</span><a href="/#sites">Situs terpantau</a><span>/</span><strong><%= site.code %></strong></nav>
+        <span class="hero-tag status-tag-<%= site.status %>"><i class="tag-dot"></i> ENDPOINT SIMULASI · <%= site.status.toUpperCase() %></span>
+        <h1><%= site.name %></h1>
+        <p class="hero-lead">Portal informasi publik wilayah <strong><%= site.city %></strong>. Seluruh konten, angka, dan status pada halaman ini dibuat untuk demonstrasi GARUDA SHIELD.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#informasi">Lihat informasi <span aria-hidden="true">↓</span></a>
+          <a class="btn btn-ghost" href="/#map">Peta pemantauan <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-facts">
+          <div class="fact"><span>KODE WILAYAH</span><strong><%= site.code %></strong></div>
+          <div class="fact"><span>KOORDINAT DEMO</span><strong><%= site.lat.toFixed(2) %>° / <%= site.lng.toFixed(2) %>°</strong></div>
+          <div class="fact"><span>PROBE TERAKHIR</span><strong><%= site.checked %></strong></div>
+          <div class="fact"><span>DIPERBARUI</span><strong><%= updatedAt %></strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stat-strip" aria-label="Ringkasan status simulasi">
+      <article class="stat-card reveal">
+        <span class="stat-label">UPTIME SIMULASI</span>
+        <strong class="stat-value"><%= site.uptime %></strong>
+        <span class="stat-foot"><i class="key-dot dot-<%= site.status %>"></i> Nilai sintetis</span>
+      </article>
+      <article class="stat-card reveal">
+        <span class="stat-label">LATENSI UJI</span>
+        <strong class="stat-value"><span data-count="<%= site.latency === null ? 0 : site.latency %>">0</span><small>ms</small></strong>
+        <span class="stat-foot">Bukan pengukuran jaringan nyata</span>
+      </article>
+      <article class="stat-card reveal">
+        <span class="stat-label">LAYANAN DIGITAL</span>
+        <strong class="stat-value"><span data-count="14">0</span><small>layanan</small></strong>
+        <span class="stat-foot">Katalog contoh</span>
+      </article>
+      <article class="stat-card reveal">
+        <span class="stat-label">KUNJUNGAN 24 JAM</span>
+        <strong class="stat-value"><span data-count="12840">0</span></strong>
+        <span class="stat-foot">Trafik fiktif untuk demo</span>
+      </article>
+    </section>
+
+    <section class="notice-wrap reveal">
+      <div class="notice-icon">i</div>
+      <div><strong>Ini adalah situs dummy untuk demonstrasi GARUDA SHIELD.</strong><p>Nama wilayah hanya digunakan sebagai label contoh. Konten, gambar, status layanan, dan seluruh angka di halaman ini dibuat untuk simulasi, bukan mewakili institusi atau kondisi sebenarnya.</p></div>
+      <span class="notice-tag">DEMO ONLY</span>
+    </section>
+
+    <section class="content-grid" id="sekitar">
+      <div class="primary-content">
+        <div class="section-head"><div><span class="eyebrow">01 / SEKILAS</span><h2>Selamat datang</h2></div><span class="section-rule"></span></div>
+        <p class="lead">Portal contoh ini memperlihatkan bagaimana halaman informasi wilayah dapat ditampilkan dalam skenario pemantauan situs terdistribusi.</p>
+        <p class="body-copy">Dalam implementasi nyata, konten resmi harus berasal dari pengelola situs yang berwenang, melalui sumber data yang disetujui, dan melewati proses verifikasi sebelum dipublikasikan. Halaman ini tidak mengambil ataupun menampilkan konten dari situs eksternal.</p>
+
+        <div class="section-head" id="layanan"><div><span class="eyebrow">02 / LAYANAN</span><h2>Akses cepat</h2></div><span class="section-rule"></span></div>
+        <div class="service-grid">
+          <button class="service-card reveal" type="button" data-service="Informasi publik"><span class="service-icon" aria-hidden="true">◆</span><strong>Informasi publik</strong><small>Pengumuman &amp; dokumen contoh</small><span class="service-go" aria-hidden="true">↗</span></button>
+          <button class="service-card reveal" type="button" data-service="Status layanan"><span class="service-icon" aria-hidden="true">◈</span><strong>Status layanan</strong><small>Pemantauan endpoint simulasi</small><span class="service-go" aria-hidden="true">↗</span></button>
+          <button class="service-card reveal" type="button" data-service="Peta wilayah"><span class="service-icon" aria-hidden="true">◎</span><strong>Peta wilayah</strong><small>Titik pantau nasional</small><span class="service-go" aria-hidden="true">↗</span></button>
+          <button class="service-card reveal" type="button" data-service="Laporan masyarakat"><span class="service-icon" aria-hidden="true">△</span><strong>Laporan masyarakat</strong><small>Kanal pengaduan simulasi</small><span class="service-go" aria-hidden="true">↗</span></button>
+        </div>
+
+        <div class="section-head news-head" id="informasi"><div><span class="eyebrow">03 / INFORMASI</span><h2>Kabar simulasi</h2></div><span class="section-rule"></span><span class="section-counter"><span id="news-visible">6</span> ITEM</span></div>
+        <div class="news-tools">
+          <label class="search-field"><span aria-hidden="true">⌕</span><input id="news-search" type="search" placeholder="Cari kabar simulasi" autocomplete="off" aria-label="Cari kabar simulasi"><kbd>/</kbd></label>
+          <div class="news-filters" role="group" aria-label="Filter kategori">
+            <button class="news-filter active" type="button" data-filter="all">Semua</button>
+            <button class="news-filter" type="button" data-filter="layanan">Layanan</button>
+            <button class="news-filter" type="button" data-filter="keamanan">Keamanan</button>
+            <button class="news-filter" type="button" data-filter="wilayah">Wilayah</button>
+          </div>
+        </div>
+        <div class="news-list" id="news-list">
+          <article class="news-item reveal" data-category="layanan" data-title="latihan kesiapsiagaan layanan digital"><span class="news-number">01</span><div><span class="news-date">15 OKTOBER 2026 · CONTOH</span><span class="news-badge badge-layanan">LAYANAN</span><h3>Latihan kesiapsiagaan layanan digital</h3><p>Contoh konten berita untuk keperluan demo antarmuka.</p></div><span class="news-arrow">↗</span></article>
+          <article class="news-item reveal" data-category="wilayah" data-title="pembaruan informasi publik wilayah"><span class="news-number">02</span><div><span class="news-date">08 OKTOBER 2026 · CONTOH</span><span class="news-badge badge-wilayah">WILAYAH</span><h3>Pembaruan informasi publik wilayah</h3><p>Konten ini fiktif dan tidak merujuk pada kejadian nyata.</p></div><span class="news-arrow">↗</span></article>
+          <article class="news-item reveal" data-category="keamanan" data-title="penguatan literasi keamanan digital"><span class="news-number">03</span><div><span class="news-date">01 OKTOBER 2026 · CONTOH</span><span class="news-badge badge-keamanan">KEAMANAN</span><h3>Penguatan literasi keamanan digital</h3><p>Informasi contoh untuk menunjukkan variasi daftar berita.</p></div><span class="news-arrow">↗</span></article>
+          <article class="news-item reveal" data-category="layanan" data-title="pemeliharaan terjadwal portal informasi"><span class="news-number">04</span><div><span class="news-date">24 SEPTEMBER 2026 · CONTOH</span><span class="news-badge badge-layanan">LAYANAN</span><h3>Pemeliharaan terjadwal portal informasi</h3><p>Jadwal pemeliharaan contoh untuk demonstrasi status.</p></div><span class="news-arrow">↗</span></article>
+          <article class="news-item reveal" data-category="keamanan" data-title="simulasi deteksi anomali lalu lintas data"><span class="news-number">05</span><div><span class="news-date">17 SEPTEMBER 2026 · CONTOH</span><span class="news-badge badge-keamanan">KEAMANAN</span><h3>Simulasi deteksi anomali lalu lintas data</h3><p>Narasi fiktif untuk memamerkan fitur pemantauan.</p></div><span class="news-arrow">↗</span></article>
+          <article class="news-item reveal" data-category="wilayah" data-title="sosialisasi kanal informasi daerah"><span class="news-number">06</span><div><span class="news-date">10 SEPTEMBER 2026 · CONTOH</span><span class="news-badge badge-wilayah">WILAYAH</span><h3>Sosialisasi kanal informasi daerah</h3><p>Item contoh untuk mengisi daftar informasi wilayah.</p></div><span class="news-arrow">↗</span></article>
+          <div class="news-empty" id="news-empty" hidden>Tidak ada kabar yang cocok.</div>
+        </div>
+      </div>
+
+      <aside class="side-content">
+        <section class="status-panel">
+          <div class="side-head"><span class="eyebrow">STATUS ENDPOINT</span><span class="pulse"></span></div>
+          <div class="status-main"><span class="status-orbit status-orbit-<%= site.status %>"><i></i></span><div><strong><%= site.status === 'offline' ? 'TIDAK MERESPONS (SIM.)' : site.status === 'warning' ? 'LATENSI TINGGI (SIM.)' : site.status === 'maintenance' ? 'PEMELIHARAAN (SIM.)' : 'SIMULASI AKTIF' %></strong><small>Nilai demonstrasi lokal</small></div></div>
+          <div class="status-rows">
+            <div><span>Alamat uji</span><code id="status-url">https://<%= site.id %>.test</code></div>
+            <div><span>Status HTTP</span><strong><%= site.status === 'offline' ? 'TIMEOUT SIM.' : site.status === 'warning' ? '503 SIM.' : '200 SIM.' %></strong></div>
+            <div><span>Latensi</span><strong><%= site.latency === null ? '—' : `${site.latency} ms` %></strong></div>
+            <div><span>Uptime contoh</span><strong><%= site.uptime %></strong></div>
+          </div>
+          <button class="copy-button" type="button" data-copy="https://<%= site.id %>.test"><span aria-hidden="true">⧉</span> Salin alamat uji</button>
+          <div class="status-foot"><span>DIHASILKAN DARI DATA DUMMY</span><span><%= site.checked %></span></div>
+        </section>
+
+        <section class="quick-panel">
+          <span class="eyebrow">04 / NAVIGASI</span>
+          <a href="#sekitar">Sekilas <span>↓</span></a>
+          <a href="#layanan">Layanan <span>↓</span></a>
+          <a href="#informasi">Informasi simulasi <span>↓</span></a>
+          <a href="/#map">Peta pemantauan <span>↗</span></a>
+        </section>
+
+        <section class="contact-panel" id="kontak">
+          <span class="eyebrow">05 / KONTAK</span>
+          <h3>Kanal informasi</h3>
+          <p>Nomor dan alamat di bawah adalah data contoh untuk demonstrasi.</p>
+          <ul class="contact-list">
+            <li><span class="contact-glyph" aria-hidden="true">☎</span><span><small>Telepon simulasi</small><strong>(021) 555-0000</strong></span></li>
+            <li><span class="contact-glyph" aria-hidden="true">✉</span><span><small>Surel simulasi</small><strong>info@<%= site.id %>.test</strong></span></li>
+            <li><span class="contact-glyph" aria-hidden="true">⌂</span><span><small>Lokasi contoh</small><strong><%= site.city %>, Indonesia</strong></span></li>
+          </ul>
+        </section>
+      </aside>
+    </section>
+
+    <section class="profile-band reveal" id="profil"><div><span class="eyebrow">PROFIL / DATA CONTOH</span><h2>Tentang wilayah</h2></div><p>Area <strong><%= site.city %></strong> digunakan sebagai konteks visual untuk endpoint simulasi <strong><%= site.code %></strong>. Profil ini tidak menyediakan data organisasi, personel, fasilitas, maupun operasi sebenarnya.</p><div class="profile-index">GS<br><strong>SIM</strong></div></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-col footer-brand-col">
+        <a class="footer-brand" href="/">GARUDA SHIELD</a>
+        <p>Purwarupa pemantauan situs dummy untuk demonstrasi keamanan siber. Seluruh isi halaman bersifat fiktif.</p>
+      </div>
+      <div class="footer-col"><span class="footer-title">NAVIGASI</span><a href="#sekitar">Sekilas</a><a href="#layanan">Layanan</a><a href="#informasi">Informasi</a><a href="#kontak">Kontak</a></div>
+      <div class="footer-col"><span class="footer-title">STATUS</span><a href="/#map">Peta pemantauan</a><a href="/#sites">Situs terpantau</a><a href="/#incidents">Insiden simulasi</a></div>
+      <div class="footer-col"><span class="footer-title">ENDPOINT</span><code>https://<%= site.id %>.test</code><span class="footer-muted">Status: <%= site.status.toUpperCase() %></span></div>
+    </div>
+    <div class="footer-bar"><span>PORTAL DUMMY · SELURUH KONTEN BERSIFAT FIKTIF</span><span><%= updatedAt %></span><a href="/situs-dummy/<%= site.id %>">KEMBALI KE ATAS ↑</a></div>
+  </footer>
+
+  <button class="to-top" id="to-top" type="button" aria-label="Kembali ke atas"><span aria-hidden="true">↑</span></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/dummy-site.js" defer></script>
+  <% } %>
+</body>
+</html>
