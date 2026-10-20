@@ -26,8 +26,6 @@ GARUDA SHIELD adalah demonstrator yang memperlihatkan alur *event → deteksi �
 
 ## Cuplikan Layar
 
-> **Catatan bagi penjaga repositori:** gambar `karya/6.png`, `karya/7.png`, dan `karya/8.png` belum dikumpulkan (todo). Jalankan demo, ambil tangkapan layar sesuai urutan babak di bawah, dan simpan dengan nama file itu agar ilustrasi lengkap.
-
 ### 1. Dashboard Peta Situasi — gambaran menyeluruh seluruh wilayah
 
 ![Dashboard peta situasi GARUDA SHIELD](karya/1.png)
