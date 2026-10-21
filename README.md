@@ -125,7 +125,8 @@ docs/             proposal, dokumentasi teknis, naskah demo, slide, ceklist
 - Mode dampak serangan merupakan efek visual demo; pita "LINGKUNGAN SIMULASI" selalu tampil agar konten tidak dikira defacement nyata.
 - Sirine alarm: "Air Raid Siren" oleh orangefreesounds.com, lisensi **CC BY 4.0** — atribusi tercantum pada komentar elemen audio di `src/views/index.ejs`.
 
-Dokumen pendukung lengkap ada di [`docs/`](docs/): 
+Dokumen pendukung lengkap ada di 
+[`docs/`](docs/): 
 - [proposal.md](docs/proposal.md)
 - [technical.md](docs/technical.md)
 - [demo-script.md](docs/demo-script.md)
