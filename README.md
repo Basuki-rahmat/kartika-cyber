@@ -127,9 +127,9 @@ docs/             proposal, dokumentasi teknis, naskah demo, slide, ceklist
 
 Dokumen pendukung lengkap ada di 
 [`docs/`](docs/): 
+- [ceklist.md](docs/ceklist.md)
 - [proposal.md](docs/proposal.md)
 - [technical.md](docs/technical.md)
 - [demo-script.md](docs/demo-script.md)
 - [presentation-slides.md](docs/presentation-slides.md)
-- [ceklist.md](docs/ceklist.md)
 - [Security Modules](docs/security-modules.md)
