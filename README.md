@@ -1,3 +1,4 @@
+[](docs/Garuda Shield_ Pusat Operasi Siber.png)
 # GARUDA SHIELD
 
 > **Purwarupa kategori Defensive Shield — pemantauan situs dummy IT/OT dengan peta offline, konsol simulasi serangan, rule engine deteksi, dan alur tindak lanjut insiden.**
