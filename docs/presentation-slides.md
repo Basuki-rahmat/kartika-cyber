@@ -8,8 +8,8 @@ Draft isi slide dan catatan pembicara untuk presentasi sekitar 7-9 menit. Isi na
 
 **Purwarupa Defensive Shield untuk simulasi deteksi dan tindak lanjut insiden IT/OT**
 
-- Tim: [Cyber Community]
-- Anggota: [Fitria Khasanan], [Basuki Rahmat], [Frida Panjaitan]
+- Tim: Cyber Community
+- Anggota: Fitria Khasanan, Basuki Rahmat, Frida Panjaitan
 - Kartika Cyber Hackathon 2026
 
 **Catatan pembicara:**
