@@ -7,9 +7,37 @@ const markers = new Map();
 const map = L.map('map', {
   attributionControl: true,
   zoomControl: false,
-  scrollWheelZoom: false
+  scrollWheelZoom: false,
+  zoomSnap: 0
 }).setView([-2.5, 118], 4);
 let pendingAttackView = null;
+let provinceBounds = null;
+let mapUserMoved = false;
+
+/* Tepat memenuhi frame: pas 100% di tepi kanan & kiri (presisi), tanpa padding.
+   zoomSnap: 0 membuat getBoundsZoom menghasilkan zoom pecahan → lebar peta
+   benar-benar pas dengan frame, bukan dibulatkan ke bawah (terlihat kecil). */
+function fitMapToEdges() {
+  if (!provinceBounds || !map) return;
+  const size = map.invalidateSize({ animate: false }).getSize();
+  if (size.x === 0 || size.y === 0) return;
+  const zoom = Math.min(map.getBoundsZoom(provinceBounds, false, [0, 0]), 9);
+  mapUserMoved = false;
+  map.setView(provinceBounds.getCenter(), zoom, { animate: false });
+}
+
+/* Hanya fit ulang selama pengguna belum menggeser/memperbesar manual. */
+['dragstart', 'zoomstart', 'movestart'].forEach((type) => {
+  map.on(type, (event) => { if (event.originalEvent) mapUserMoved = true; });
+});
+
+if (typeof ResizeObserver !== 'undefined') {
+  const mapResizeObserver = new ResizeObserver(() => {
+    map.invalidateSize({ animate: false });
+    if (provinceBounds && !mapUserMoved) fitMapToEdges();
+  });
+  mapResizeObserver.observe(mapFrame);
+}
 
 const statusNames = {
   online: 'NORMAL',
@@ -102,6 +130,7 @@ document.addEventListener('keydown', (event) => {
 document.querySelector('#zoom-in').addEventListener('click', () => map.zoomIn());
 document.querySelector('#zoom-out').addEventListener('click', () => map.zoomOut());
 document.querySelector('#zoom-reset').addEventListener('click', () => {
+  if (provinceBounds) { fitMapToEdges(); return; }
   const visibleSites = siteData.filter((site) => {
     const row = siteRows.find((candidate) => candidate.dataset.siteId === site.id);
     return row && !row.hidden;
@@ -128,10 +157,10 @@ fetch('/data/indonesia-province-simple.json')
         layer.bindTooltip(provinceName, { sticky: true, className: 'province-tooltip' });
       }
     }).addTo(map);
-    map.fitBounds(provinceLayer.getBounds(), { padding: [18, 18] });
+    provinceBounds = provinceLayer.getBounds();
     map.attributionControl.setPrefix('GARUDA SHIELD');
-    map.invalidateSize();
-    if (pendingAttackView) map.setView(pendingAttackView, 6);
+    fitMapToEdges();
+    if (pendingAttackView) { mapUserMoved = true; map.setView(pendingAttackView, 6); }
   })
   .catch((error) => {
     document.querySelector('#map-error').hidden = false;
@@ -245,6 +274,7 @@ function renderAttack(attack) {
 
   showAttackAlert(attack, level);
   startAlarm();
+  markProbeAttack(attack);
   runAiAnalysis(attack);
 }
 
@@ -427,6 +457,7 @@ function completeRecovery() {
     statusElement.innerHTML = '<i></i> AMAN · SITUS PULIH';
   }
   stopAttackAnimation();
+  clearProbeAttack();
   if (activeAttack) {
     resolveAlerts(activeAttack);
     markRecovered(activeAttack);
@@ -728,6 +759,10 @@ function applyProbeFilter() {
 function sortProbeRows() {
   const mode = probeSort ? probeSort.value : 'status';
   const sorted = [...probeRowEls].sort((left, right) => {
+    /* Baris situs yang diserang selalu di atas agar tetap fokus */
+    const leftHit = left.classList.contains('attacked') ? 1 : 0;
+    const rightHit = right.classList.contains('attacked') ? 1 : 0;
+    if (leftHit !== rightHit) return rightHit - leftHit;
     if (mode === 'latency-desc' || mode === 'latency-asc') {
       const leftValue = Number(left.dataset.baseLatency) || 0;
       const rightValue = Number(right.dataset.baseLatency) || 0;
@@ -738,6 +773,81 @@ function sortProbeRows() {
     return (probeStatusOrder[left.dataset.status] ?? 9) - (probeStatusOrder[right.dataset.status] ?? 9);
   });
   sorted.forEach((row) => probeBody.appendChild(row));
+}
+
+/* Serangan: sorot baris situs target + burukkan nilai respon & latensi sampai dipulihkan */
+let attackedProbeRow = null;
+const probeAttackProfiles = {
+  critical: { response: '503', note: 'LAYANAN JATUH', loss: 62, spike: 3.1 },
+  high: { response: '503', note: 'DEGRADASI', loss: 31, spike: 2.4 },
+  medium: { response: '403', note: 'TERBLOKIR', loss: 12, spike: 1.7 }
+};
+
+function focusProbeRow(row) {
+  const wrap = probeBody.closest('.probe-table-wrap');
+  if (!wrap) return;
+  wrap.scrollTo({ top: Math.max(0, row.offsetTop - wrap.clientHeight / 2), behavior: 'smooth' });
+}
+
+function applyProbeAttackEffects(row, level) {
+  const base = Number(row.dataset.baseLatency) || 0;
+  const profile = probeAttackProfiles[level] || probeAttackProfiles.medium;
+  const value = Math.max(240, Math.round(base * profile.spike * (0.9 + Math.random() * 0.25)));
+  const latencyCell = row.querySelector('[data-latency]');
+  const latencyBar = row.querySelector('[data-lat-bar]');
+  const lossCell = row.querySelector('[data-loss]');
+  const responseCell = row.querySelector('[data-response]');
+  const conditionCell = row.querySelector('[data-condition]');
+
+  /* Latensi melonjak, keep hilang tiba-tiba, respon gagal — efek tampil terus sampai pemulihan */
+  if (latencyCell) latencyCell.textContent = `${value} ms`;
+  if (latencyBar) {
+    latencyBar.style.width = `${Math.min(100, Math.round(value / 9))}%`;
+    latencyBar.style.background = 'var(--red)';
+  }
+  if (lossCell) lossCell.textContent = `${Math.min(100, Math.round(profile.loss * (0.8 + Math.random() * 0.4)))}%`;
+  if (responseCell) responseCell.textContent = profile.response;
+  if (conditionCell) {
+    conditionCell.textContent = `SERANGAN · ${profile.note}`;
+    conditionCell.className = 'condition condition-attacked';
+  }
+  /* Simpan latensi terdampak agar urutan latensi mengangkat baris ini ke posisi atas */
+  row.dataset.baseLatency = String(value);
+  row.dataset.checkedSec = '0';
+  updateProbeTime(row);
+  row.classList.remove('probe-flash');
+}
+
+function markProbeAttack(attack) {
+  if (!probeBody || !attack.site) return;
+  clearProbeAttack();
+  const row = probeRowEls.find((candidate) => candidate.dataset.siteId === attack.site.id);
+  if (!row) return;
+  attackedProbeRow = row;
+  row.classList.add('attacked');
+  row.hidden = false; /* tembus filter agar baris terdampak tetap terlihat */
+  applyProbeAttackEffects(row, severityLevel(attack.detections || []));
+  focusProbeRow(row);
+  recomputeProbeCounts();
+  sortProbeRows();
+}
+
+function clearProbeAttack() {
+  const row = attackedProbeRow;
+  if (!row) return;
+  attackedProbeRow = null;
+  row.classList.remove('attacked');
+  const latencyBar = row.querySelector('[data-lat-bar]');
+  const conditionCell = row.querySelector('[data-condition]');
+  if (latencyBar) latencyBar.style.background = '';
+  if (conditionCell) conditionCell.className = `condition condition-${row.dataset.status}`;
+  /* Kembalikan latensi dasar dari data situs, lalu isi ulang nilai normal */
+  const site = siteData.find((candidate) => candidate.id === row.dataset.siteId);
+  if (site) row.dataset.baseLatency = String(Number(site.latency) || 0);
+  applyProbeResult(row);
+  recomputeProbeCounts();
+  applyProbeFilter();
+  sortProbeRows();
 }
 
 function applyProbeResult(row) {
@@ -784,8 +894,10 @@ async function runProbe() {
   rows.forEach((row) => row.classList.add('probing'));
   for (const row of rows) {
     await delay(60 + Math.random() * 120);
-    applyProbeResult(row);
     row.classList.remove('probing');
+    /* Situs yang masih terdampak serangan tidak dinormalisasi oleh pemeriksaan manual */
+    if (row === attackedProbeRow) continue;
+    applyProbeResult(row);
   }
   recomputeProbeCounts();
   sortProbeRows();
@@ -812,8 +924,12 @@ setInterval(probeTick, 1000);
   const railToggle = document.querySelector('#rail-toggle');
   if (!railToggle) return;
   try {
-    if (localStorage.getItem('gs-rail-collapsed') === '1') document.body.classList.add('rail-collapsed');
-  } catch (error) {}
+    /* Default tertutup; hanya buka kembali jika pengguna pernah membukanya. */
+    if (localStorage.getItem('gs-rail-collapsed') === '0') document.body.classList.remove('rail-collapsed');
+    else document.body.classList.add('rail-collapsed');
+  } catch (error) {
+    document.body.classList.add('rail-collapsed');
+  }
   railToggle.setAttribute('aria-pressed', document.body.classList.contains('rail-collapsed') ? 'true' : 'false');
   railToggle.addEventListener('click', () => {
     const collapsed = document.body.classList.toggle('rail-collapsed');
@@ -821,4 +937,16 @@ setInterval(probeTick, 1000);
     try { localStorage.setItem('gs-rail-collapsed', collapsed ? '1' : '0'); } catch (error) {}
     setTimeout(() => { if (typeof map !== 'undefined' && map.invalidateSize) map.invalidateSize(); }, 240);
   });
+})();
+/* Denyut angka Dashboard Situasi agar terasa hidup (simulasi, fluktuasi kecil) */
+(() => {
+  const personelChip = document.querySelector('.stat-chip[data-tick="personel"]');
+  if (!personelChip) return;
+  const valueEl = personelChip.querySelector('[data-value]');
+  const base = Number(personelChip.dataset.base);
+  if (!valueEl || !Number.isFinite(base)) return;
+  setInterval(() => {
+    const drift = Math.round((Math.random() - 0.5) * 6);
+    valueEl.textContent = Math.max(0, base + drift);
+  }, 4000);
 })();

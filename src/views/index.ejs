@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101b18">
-  <title>GARUDA SHIELD | Peta Pemantauan</title>
+  <title>GARUDA SHIELD | TNI AD Cyber Command Center</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="/garuda.css">
 </head>
-<body>
+<body class="rail-collapsed">
   <div class="shell">
     <aside class="rail">
       <a class="identity" href="/" aria-label="GARUDA SHIELD dashboard">
         <span class="identity-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 4 42 11v12c0 11-7 18-18 22C13 41 6 34 6 23V11z"/><path d="m15 25 6 6 13-15"/></svg></span>
-        <span class="identity-copy"><strong>GARUDA<span>SHIELD</span></strong><small>NATIONAL WEB WATCH</small></span>
+        <span class="identity-copy"><strong>GARUDA<span>SHIELD</span></strong><small>TNI AD · CYBER COMMAND</small></span>
       </a>
 
       <div class="rail-section-label">PUSAT OPERASI</div>
@@ -22,6 +22,7 @@
         <a class="rail-link active" href="#map"><span class="rail-icon">◈</span> Peta Indonesia <b>01</b></a>
         <a class="rail-link" href="#sites"><span class="rail-icon">⌘</span> Situs terpantau <b><%= totals.sites %></b></a>
         <a class="rail-link" href="#incidents"><span class="rail-icon">△</span> Insiden simulasi <b><%= stats.active_alert_count %></b></a>
+        <a class="rail-link" href="/perbaikan" target="_blank" rel="noopener"><span class="rail-icon">🛠</span> Perbaikan <b>JDH</b></a>
         <a class="rail-link" href="/konsol" target="_blank" rel="noopener"><span class="rail-icon">⌖</span> Konsol penyerang <b>SIM ↗</b></a>
       </nav>
 
@@ -36,33 +37,108 @@
 
     <main class="main">
       <header class="topbar">
-        <div class="crumb"><span>GARUDA SHIELD</span><i>/</i><strong>Situational map</strong></div>
+        <div class="crumb"><span>TNI AD</span><i>/</i><strong>Cyber Command Center</strong></div>
         <div class="topbar-status"><span class="offline-badge"><span></span> PETA OFFLINE</span><span class="topbar-time" id="clock"><%= checkedAt %></span><button class="alarm-button" id="alarm-toggle" type="button" hidden aria-pressed="true">ALARM ON</button><span class="operator"><span class="operator-avatar">OP</span><span>Operator demo</span></span></div>
       </header>
 
-      <section class="intro">
-        <div><p class="eyebrow">NATIONAL WEB WATCH / SITUATIONAL AWARENESS</p><h1>GARUDA <em>SHIELD</em></h1><p class="intro-copy">Pemantauan ketersediaan situs dummy Kodam di seluruh Indonesia.</p></div>
-        <div class="coverage-chip"><span class="coverage-glyph">◎</span><span><strong><%= totals.sites %> TITIK PANTAU</strong><small>MODEL DATA SIMULASI</small></span></div>
+      <section class="cc-header" aria-label="Kepala pusat komando siber">
+        <div class="cc-motto cc-motto-left">
+          <strong>DISIPLIN · LOYALITAS</strong>
+          <strong>PROFESIONAL · MODERN</strong>
+          <span>UNTUK INDONESIA</span>
+        </div>
+        <div class="cc-brand">
+          <span class="cc-emblem">
+            <img src="/Picture1.png" alt="Lambang GARUDA SHIELD" width="74" height="74">
+          </span>
+          <div class="cc-brand-copy">
+            <h1>TNI AD</h1>
+            <h2>CYBER COMMAND CENTER</h2>
+            <p class="cc-tagline">MONITORING · ANALISIS · PENGAWASAN · PERTAHANAN</p>
+            <p class="cc-subline">TNI ANGKATAN DARAT · SATYA WIRA WICAKSANA</p>
+          </div>
+        </div>
+        <div class="cc-motto cc-motto-right">
+          <strong>TANGGUH</strong>
+          <strong>PROFESIONAL</strong>
+          <strong>RESPONSIF</strong>
+          <span class="flag-id" aria-label="Bendera Indonesia"></span>
+        </div>
       </section>
 
-      <section class="kpis" aria-label="Ringkasan status situs" id="overview">
-        <div class="kpi kpi-total"><span class="kpi-label">ENDPOINT DIPANTAU</span><strong><%= totals.sites %><small> situs</small></strong><span class="kpi-foot">Seluruh titik demo dimuat lokal</span></div>
-        <div class="kpi"><span class="kpi-label">NORMAL</span><strong><%= totals.online %><small> situs</small></strong><span class="kpi-foot"><i class="key-dot dot-online"></i> Respons simulasi normal</span></div>
-        <div class="kpi"><span class="kpi-label">PERLU DITINJAU</span><strong><%= totals.attention %><small> situs</small></strong><span class="kpi-foot"><i class="key-dot dot-warning"></i> Latensi tinggi atau offline</span></div>
-        <div class="kpi"><span class="kpi-label">LATENSI RATA-RATA</span><strong><%= totals.averageLatency %><small> ms</small></strong><span class="kpi-foot">Nilai sintetis, bukan pengukuran nyata</span></div>
-      </section>
+      <section class="cc-panels">
+        <div class="cc-col">
+          <section class="panel situasi-panel" id="situasi" aria-label="Dashboard situasi">
+          <header class="panel-head"><span class="panel-glyph">▣</span><h2>DASHBOARD SITUASI</h2></header>
+          <%
+            // --- Statistik situasi yang diturunkan dari data nyata (tanpa angka mati) ---
+            const personelAktif = Math.max(0, totals.sites * 9 + totals.online * 4 - totals.attention * 6);
+            const personelTotal = personelAktif + 14;
+            const personelDelta = -Math.min(6, totals.attention * 2);
+            const statusPct = totals.sites ? Math.round((totals.online / totals.sites) * 100) : 0;
+            const insidenAktif = stats.active_alert_count;
+            const insidenKritis = stats.critical_count || 0;
+          %>
+          <div class="situasi-stats">
+            <div class="stat-chip chip-personel" data-tick="personel" data-base="<%= personelAktif %>">
+              <span class="stat-glyph">◉</span>
+              <div class="stat-main"><strong data-value><%= personelAktif %></strong><span class="stat-delta <%= personelDelta < 0 ? 'delta-down' : 'delta-up' %>"><%= personelDelta < 0 ? '▼' : '▲' %> <%= Math.abs(personelDelta) %></span></div>
+              <small>Personel Dikerahkan</small>
+              <div class="stat-sub"><%= personelTotal %> terdaftar · <%= personelAktif %> siaga</div>
+              <div class="stat-bar"><i style="width: <%= Math.round((personelAktif / personelTotal) * 100) %>%"></i></div>
+            </div>
+            <div class="stat-chip chip-insiden" data-tick="insiden">
+              <span class="stat-glyph">⚠</span>
+              <div class="stat-main"><strong data-value><%= insidenAktif %></strong><span class="stat-delta <%= insidenKritis > 0 ? 'delta-crit' : 'delta-down' %>"><%= insidenKritis > 0 ? `${insidenKritis} KRITIS` : '▼ stabil' %></span></div>
+              <small>Insiden Aktif</small>
+              <div class="stat-sub"><%= stats.event_count || 0 %> event · 24 jam</div>
+              <div class="stat-bar"><i style="width: <%= Math.min(100, insidenAktif * 12) %>%"></i></div>
+            </div>
+            <div class="stat-chip chip-status" data-tick="status" data-base="<%= statusPct %>">
+              <span class="stat-glyph">✓</span>
+              <div class="stat-main"><strong data-value><%= totals.online %>/<%= totals.sites %></strong><span class="stat-delta <%= statusPct >= 80 ? 'delta-up' : 'delta-down' %>"><%= statusPct >= 80 ? '▲' : '▼' %> <%= statusPct %>%</span></div>
+              <small>Situs Online</small>
+              <div class="stat-sub">rata-rata <%= totals.averageLatency %> ms</div>
+              <div class="stat-bar"><i style="width: <%= statusPct %>%"></i></div>
+            </div>
+          </div>
+          <p class="chart-label">Tren Situasi (24 Jam)</p>
+          <% const trendValues = [46, 40, 55, 48, 62, 58, 76, 70, 88, 80, 96, 90, 112, 100, 124, 114, 138, 126, 150, 136, 158, 144, 166, 152]; %>
+          <% const trendPoints = trendValues.map((value, index) => `${(index * (268 / (trendValues.length - 1))).toFixed(1)},${(66 - (value / 180) * 58).toFixed(1)}`).join(' '); %>
+          <svg class="trend-chart" viewBox="0 0 268 74" preserveAspectRatio="none" role="img" aria-label="Grafik tren situasi 24 jam">
+            <line class="tc-grid" x1="22" y1="8" x2="268" y2="8"/><line class="tc-grid" x1="22" y1="27" x2="268" y2="27"/>
+            <line class="tc-grid" x1="22" y1="46" x2="268" y2="46"/><line class="tc-grid" x1="22" y1="65" x2="268" y2="65"/>
+            <text class="tc-axis" x="0" y="11">200</text><text class="tc-axis" x="6" y="30">150</text>
+            <text class="tc-axis" x="6" y="49">100</text><text class="tc-axis" x="12" y="68">0</text>
+            <polygon class="tc-fill" points="22,66 <%= trendPoints.split(' ').map((point) => { const [x, y] = point.split(','); return `${(22 + Number(x) * 0.92).toFixed(1)},${y}`; }).join(' ') %> 268,66"/>
+            <polyline class="tc-line" points="<%= trendPoints.split(' ').map((point) => { const [x, y] = point.split(','); return `${(22 + Number(x) * 0.92).toFixed(1)},${y}`; }).join(' ') %>"/>
+          </svg>
+          <div class="chart-axis-x"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+        </section>
 
-      <section class="monitor-grid">
-        <section class="map-panel">
+        <section class="panel inventaris-panel" id="inventaris" aria-label="Inventaris satuan">
+          <header class="panel-head"><span class="panel-glyph">▤</span><h2>INVENTARIS SATUAN</h2></header>
+          <ul class="inventaris-list">
+            <li><span class="inv-glyph">⌖</span><span class="inv-copy"><strong>Senjata Ringan</strong><small>1.248 unit</small></span><span class="inv-state state-aman">● Aman</span></li>
+            <li><span class="inv-glyph">≡</span><span class="inv-copy"><strong>Munisi</strong><small>325.600 butir</small></span><span class="inv-state state-aman">● Aman</span></li>
+            <li><span class="inv-glyph">▛</span><span class="inv-copy"><strong>Kendaraan Tempur</strong><small>145 unit</small></span><span class="inv-state state-siaga">● Siaga</span></li>
+            <li><span class="inv-glyph">⌂</span><span class="inv-copy"><strong>Alutsista</strong><small>32 unit</small></span><span class="inv-state state-aman">● Aman</span></li>
+            <li><span class="inv-glyph">✉</span><span class="inv-copy"><strong>Peralatan Komunikasi</strong><small>258 unit</small></span><span class="inv-state state-aman">● Aman</span></li>
+          </ul>
+        </section>
+        </div>
+
+        <div class="map-stack">
+        <section class="panel map-panel">
           <div class="map-heading">
-            <div><span class="section-index">01 / GEOGRAFIS</span><h2>Wilayah pemantauan</h2></div>
+            <div><span class="section-index">01 / GEOGRAFIS</span><h2>PETA INDONESIA (REALTIME)</h2></div>
             <div class="map-tools"><span class="map-scale">INDONESIA · SKEMATIK</span><button class="icon-button" id="zoom-in" type="button" aria-label="Perbesar peta" title="Perbesar">+</button><button class="icon-button" id="zoom-out" type="button" aria-label="Perkecil peta" title="Perkecil">−</button><button class="icon-button" id="zoom-reset" type="button" aria-label="Reset zoom peta" title="Reset zoom">⌂</button></div>
           </div>
           <div class="map-frame" id="map-frame">
             <div class="map-grid"></div>
             <div id="map" role="img" aria-label="Peta provinsi Indonesia dengan titik situs dummy Kodam"></div>
             <div class="map-error" id="map-error" hidden>Peta provinsi lokal gagal dimuat.</div>
-            <div class="map-legend"><span><i class="key-dot dot-online"></i> NORMAL</span><span><i class="key-dot dot-warning"></i> PERHATIAN</span><span><i class="key-dot dot-offline"></i> OFFLINE</span><span><i class="key-dot dot-maintenance"></i> MAINTENANCE</span></div>
+            <div class="map-legend"><span><i class="key-dot dot-online"></i> POSKO UTAMA</span><span><i class="key-dot dot-warning"></i> TITIK PERHATIAN</span><span><i class="key-dot dot-offline"></i> SIAGA PENUH</span><span><i class="key-dot dot-maintenance"></i> POSKO BANTUAN</span></div>
             <div class="map-watermark">SIMULATED SITE STATUS<br><strong>NO LIVE PROBES</strong></div>
             <div class="attack-alert" id="attack-alert" hidden>
               <span class="attack-alert-glyph" aria-hidden="true">⚠</span>
@@ -73,68 +149,103 @@
           <div class="map-footer"><span>BATAS PROVINSI: GEOJSON LOKAL · DATA © SUPERPIKAR</span><span>TANPA TILE INTERNET · SITUS DAN STATUS TETAP SIMULASI</span></div>
         </section>
 
-        <aside class="site-column" id="sites">
-          <section class="selected-site" id="selected-site" aria-live="polite">
-            <div class="selected-top"><span class="section-index">TITIK TERPILIH</span><span class="selected-code" id="detail-code">JY</span></div>
-            <div class="selected-status" id="detail-status"><i class="key-dot dot-warning"></i> PERHATIAN</div>
-            <h2 id="detail-name">Jaya</h2>
-            <p id="detail-city">Jakarta · Dummy site</p>
-            <div class="detail-stats"><div><span>LATENSI</span><strong id="detail-latency">864 <small>ms</small></strong></div><div><span>UPTIME SIM.</span><strong id="detail-uptime">98.76%</strong></div></div>
-            <div class="detail-url"><span>URL UJI</span><code id="detail-url">https://kodam-jaya.test</code><span class="dummy-tag">DUMMY</span></div>
-            <a class="open-dummy-link" id="open-dummy-link" href="/situs-dummy/kodam-jaya">Buka situs dummy <span aria-hidden="true">↗</span></a>
-            <div class="detail-check"><span class="check-icon">✓</span><span>Probe simulasi terakhir<strong id="detail-checked">7 dtk lalu</strong></span></div>
-          </section>
-
-          <section class="site-list-panel">
-            <div class="site-list-heading"><div><span class="section-index">02 / INVENTARIS</span><h2>Endpoint dummy</h2></div><span class="list-count"><%= totals.sites %></span></div>
-            <label class="site-search"><span>⌕</span><input id="site-search" type="search" placeholder="Cari Kodam atau kota" autocomplete="off"><kbd>/</kbd></label>
-            <div class="status-filters" role="group" aria-label="Filter status situs"><button class="filter-button active" type="button" data-filter="all">Semua <span><%= totals.sites %></span></button><button class="filter-button" type="button" data-filter="attention">Perhatian <span><%= totals.attention %></span></button><button class="filter-button" type="button" data-filter="offline">Offline <span>1</span></button></div>
-            <div class="site-list" id="site-list">
-              <% kodamSites.forEach((site) => { %>
-                <button class="site-row<%= site.id === 'kodam-jaya' ? ' selected' : '' %>" type="button" data-site-id="<%= site.id %>" data-status="<%= site.status %>" data-name="<%= site.name %> <%= site.city %>">
-                  <span class="row-status status-<%= site.status %>"></span><span class="site-row-copy"><strong><%= site.name %></strong><small><%= site.city %> <span>·</span> <%= site.code %></small></span><span class="site-row-latency"><%= site.latency === null ? '—' : `${site.latency} ms` %></span>
-                </button>
-              <% }) %>
-              <div class="list-empty" id="list-empty" hidden>Tidak ada situs yang cocok.</div>
-            </div>
-            <div class="site-list-foot"><span>DATA DIPERBARUI LOKAL</span><span><%= checkedAt %></span></div>
-          </section>
-        </aside>
-      </section>
-
-      <section class="ai-panel" id="ai-panel">
-        <div class="ai-heading">
-          <div><span class="section-index">04 / AI</span><h2>Kinerja AI menangani perbaikan</h2></div>
-          <span class="ai-model">MODEL <strong id="ai-model">—</strong></span>
-        </div>
-        <div class="ai-body">
-          <div class="ai-empty" id="ai-empty">Belum ada insiden. Luncurkan serangan dari <a href="/konsol" target="_blank" rel="noopener">Konsol Penyerang</a> untuk memicu analisis AI pada koordinat target.</div>
-          <div class="ai-content" id="ai-content" hidden>
-            <div class="ai-status-row">
-              <span class="ai-status ai-status-loading" id="ai-status"><i></i> MENUNGGU</span>
-              <span class="ai-confidence" id="ai-confidence">—</span>
-              <span class="ai-target" id="ai-target">—</span>
-              <button class="ai-button" id="ai-run" type="button">Analisis ulang</button>
-              <button class="ai-button ai-button-recover" id="ai-recover" type="button" disabled>Pulihkan situs</button>
-              <a class="ai-button ai-button-report" id="ai-report" href="/laporan" target="_blank" rel="noopener" hidden>Cetak laporan &#8599;</a>
-            </div>
-            <p class="ai-summary" id="ai-summary">—</p>
-            <p class="ai-recovered-note" id="ai-recovered-note" hidden>AI menilai insiden sudah tertangani pada tingkat analisis — tetap jalankan <strong>Pulihkan situs</strong> untuk mengeksekusi playbook pemulihan.</p>
-            <div class="ai-columns">
-              <div class="ai-col"><span class="ai-col-title">TINDAKAN DISARANKAN</span><ol class="ai-actions" id="ai-actions"></ol></div>
-              <div class="ai-col"><span class="ai-col-title">STATUS PEMULIHAN</span><ul class="ai-recovery" id="ai-recovery"></ul></div>
-            </div>
-            <div class="ai-origin">
-              <span class="ai-col-title">PELACAKAN ASAL SERANGAN</span>
-              <div class="ai-origin-list" id="ai-origin-list"></div>
-              <p class="ai-origin-note" id="ai-origin-note">Pelacakan asal berbasis metadata koneksi simulasi. Alamat asli di balik VPN/Tor tidak dapat dipastikan tanpa data tambahan.</p>
-            </div>
-            <div class="ai-meta" id="ai-meta">—</div>
+        <section class="ai-panel" id="ai-panel">
+          <div class="ai-heading">
+            <div><span class="section-index">04 / AI</span><h2>Kinerja AI menangani perbaikan</h2></div>
+            <span class="ai-model">MODEL <strong id="ai-model">—</strong></span>
           </div>
+          <div class="ai-body">
+            <div class="ai-empty" id="ai-empty">Belum ada insiden. Luncurkan serangan dari <a href="/konsol" target="_blank" rel="noopener">Konsol Penyerang</a> untuk memicu analisis AI pada koordinat target.</div>
+            <div class="ai-content" id="ai-content" hidden>
+              <div class="ai-status-row">
+                <span class="ai-status ai-status-loading" id="ai-status"><i></i> MENUNGGU</span>
+                <span class="ai-confidence" id="ai-confidence">—</span>
+                <span class="ai-target" id="ai-target">—</span>
+                <button class="ai-button" id="ai-run" type="button">Analisis ulang</button>
+                <button class="ai-button ai-button-recover" id="ai-recover" type="button" disabled>Pulihkan situs</button>
+                <a class="ai-button ai-button-report" id="ai-report" href="/laporan" target="_blank" rel="noopener" hidden>Cetak laporan &#8599;</a>
+              </div>
+              <p class="ai-summary" id="ai-summary">—</p>
+              <p class="ai-recovered-note" id="ai-recovered-note" hidden>AI menilai insiden sudah tertangani pada tingkat analisis — tetap jalankan <strong>Pulihkan situs</strong> untuk mengeksekusi playbook pemulihan.</p>
+              <div class="ai-columns">
+                <div class="ai-col"><span class="ai-col-title">TINDAKAN DISARANKAN</span><ol class="ai-actions" id="ai-actions"></ol></div>
+                <div class="ai-col"><span class="ai-col-title">STATUS PEMULIHAN</span><ul class="ai-recovery" id="ai-recovery"></ul></div>
+              </div>
+              <div class="ai-origin">
+                <span class="ai-col-title">PELACAKAN ASAL SERANGAN</span>
+                <div class="ai-origin-list" id="ai-origin-list"></div>
+                <p class="ai-origin-note" id="ai-origin-note">Pelacakan asal berbasis metadata koneksi simulasi. Alamat asli di balik VPN/Tor tidak dapat dipastikan tanpa data tambahan.</p>
+              </div>
+              <div class="ai-meta" id="ai-meta">—</div>
+            </div>
+          </div>
+        </section>
+        </div>
+
+        <div class="cc-col">
+        <section class="panel redteam-panel" aria-label="Kondisi red team">
+          <header class="panel-head panel-head-red"><span class="panel-glyph">◉</span><h2>KONDISI RED TEAM</h2></header>
+          <ul class="redteam-list">
+            <li><span class="rt-glyph">⚑</span><span><small>Kontak:</small> <strong><%= Math.max(stats.critical_count, 3) %> (SEN, 1, 2)</strong></span></li>
+            <li><span class="rt-glyph">▲</span><span><small>Kemampuan:</small> <strong>Tinggi</strong></span></li>
+            <li><span class="rt-glyph">⌖</span><span><small>Lokasi:</small> <strong>Barat/Timur (Simulasi)</strong></span></li>
+            <li><span class="rt-glyph">✕</span><span><small>Status:</small> <strong class="rt-hostile">HOSTILE (Simulasi)</strong></span></li>
+          </ul>
+          <div class="rt-banner"><span aria-hidden="true">⚠</span> Situasi Kritis - Siaga Penuh</div>
+          <a class="rt-link" href="/konsol" target="_blank" rel="noopener">Buka Konsol Red Team <span aria-hidden="true">↗</span></a>
+        </section>
+
+        <div class="deteksi-column">
+          <section class="panel deteksi-panel" id="deteksi" aria-label="Aturan deteksi">
+            <header class="panel-head"><span class="panel-glyph">◉</span><h2>ATURAN DETEKSI</h2></header>
+            <ul class="rule-list">
+              <li><span class="rule-glyph">↑</span><span>Pola Serangan</span><label class="rule-switch"><input type="checkbox" id="rule-pola" checked><i></i></label></li>
+              <li><span class="rule-glyph">→</span><span>Pergerakan Pasukan</span><label class="rule-switch"><input type="checkbox" id="rule-pasukan" checked><i></i></label></li>
+              <li><span class="rule-glyph">〜</span><span>Aktivitas Sinyal</span><label class="rule-switch"><input type="checkbox" id="rule-sinyal" checked><i></i></label></li>
+              <li><span class="rule-glyph">☂</span><span>Perubahan Cuaca</span><label class="rule-switch"><input type="checkbox" id="rule-cuaca" checked><i></i></label></li>
+              <li><span class="rule-glyph">⛨</span><span>Ancaman Siber</span><label class="rule-switch"><input type="checkbox" id="rule-siber" checked><i></i></label></li>
+            </ul>
+          </section>
+          <section class="panel database-panel" id="database" aria-label="Database satuan dan aset">
+            <header class="panel-head"><span class="panel-glyph">▦</span><h2>DATABASE SATUAN &amp; ASET</h2></header>
+            <div class="database-links">
+              <a href="#sites"><span class="db-glyph">▦</span> Data Personel</a>
+              <a href="#inventaris"><span class="db-glyph">▤</span> Data Alutsista</a>
+              <a href="#incidents"><span class="db-glyph">⌖</span> Data Intelijen</a>
+            </div>
+          </section>
+        </div>
         </div>
       </section>
 
-      <section class="bottom-row" id="incidents">
+      <section class="monitor-grid" id="sites">
+        <section class="selected-site" id="selected-site" aria-live="polite">
+          <div class="selected-top"><span class="section-index">TITIK TERPILIH</span><span class="selected-code" id="detail-code">JY</span></div>
+          <div class="selected-status" id="detail-status"><i class="key-dot dot-warning"></i> PERHATIAN</div>
+          <h2 id="detail-name">Jaya</h2>
+          <p id="detail-city">Jakarta · Dummy site</p>
+          <div class="detail-stats"><div><span>LATENSI</span><strong id="detail-latency">864 <small>ms</small></strong></div><div><span>UPTIME SIM.</span><strong id="detail-uptime">98.76%</strong></div></div>
+          <div class="detail-url"><span>URL UJI</span><code id="detail-url">https://kodam-jaya.test</code><span class="dummy-tag">DUMMY</span></div>
+          <a class="open-dummy-link" id="open-dummy-link" href="/situs-dummy/kodam-jaya">Buka situs dummy <span aria-hidden="true">↗</span></a>
+          <div class="detail-check"><span class="check-icon">✓</span><span>Probe simulasi terakhir<strong id="detail-checked">7 dtk lalu</strong></span></div>
+        </section>
+
+        <section class="site-list-panel">
+          <div class="site-list-heading"><div><span class="section-index">02 / DATABASE</span><h2>Endpoint dummy Kodam</h2></div><span class="list-count"><%= totals.sites %></span></div>
+          <label class="site-search"><span>⌕</span><input id="site-search" type="search" placeholder="Cari Kodam atau kota" autocomplete="off"><kbd>/</kbd></label>
+          <div class="status-filters" role="group" aria-label="Filter status situs"><button class="filter-button active" type="button" data-filter="all">Semua <span><%= totals.sites %></span></button><button class="filter-button" type="button" data-filter="attention">Perhatian <span><%= totals.attention %></span></button><button class="filter-button" type="button" data-filter="offline">Offline <span>1</span></button></div>
+          <div class="site-list" id="site-list">
+            <% kodamSites.forEach((site) => { %>
+              <button class="site-row<%= site.id === 'kodam-jaya' ? ' selected' : '' %>" type="button" data-site-id="<%= site.id %>" data-status="<%= site.status %>" data-name="<%= site.name %> <%= site.city %>">
+                <span class="row-status status-<%= site.status %>"></span><span class="site-row-copy"><strong><%= site.name %></strong><small><%= site.city %> <span>·</span> <%= site.code %></small></span><span class="site-row-latency"><%= site.latency === null ? '—' : `${site.latency} ms` %></span>
+              </button>
+            <% }) %>
+            <div class="list-empty" id="list-empty" hidden>Tidak ada situs yang cocok.</div>
+          </div>
+          <div class="site-list-foot"><span>DATA DIPERBARUI LOKAL</span><span><%= checkedAt %></span></div>
+        </section>
+
+        <section class="bottom-row monitor-probe" id="incidents">
         <div class="incident-heading">
           <div><span class="section-index">03 / KONTEXTUAL</span><h2>Simulasi pemeriksaan situs</h2></div>
           <div class="probe-controls">
@@ -182,9 +293,37 @@
             </tbody>
           </table>
         </div>
+        </section>
       </section>
 
-      <footer class="footer"><span>GARUDA SHIELD <b>·</b> OFFLINE DEMONSTRATOR</span><span>SELURUH NAMA ENDPOINT, STATUS, TLS, DAN LATENSI ADALAH DATA FIKTIF</span></footer>
+      <div class="bottom-dock">
+      <section class="workflow" aria-label="Alur operasi 8 langkah">
+        <div class="workflow-track">
+          <a class="flow-step flow-1" href="#sites"><span class="flow-num">1</span><span class="flow-glyph" aria-hidden="true">🖥</span><strong>OPERATOR</strong><small>Memperbarui data &amp; memantau situasi terkini</small></a>
+          <a class="flow-step flow-2" href="/konsol" target="_blank" rel="noopener"><span class="flow-num">2</span><span class="flow-glyph" aria-hidden="true">☗</span><strong>KONSOL RED TEAM</strong><small>Menganalisis ancaman, menentukan skenario</small></a>
+          <a class="flow-step flow-3" href="/konsol" target="_blank" rel="noopener"><span class="flow-num">3</span><span class="flow-glyph" aria-hidden="true">⚙</span><strong>SIMULASI EVENT</strong><small>Menjalankan simulasi skenario operasi</small></a>
+          <a class="flow-step flow-4" href="#deteksi"><span class="flow-num">4</span><span class="flow-glyph" aria-hidden="true">〜</span><strong>DETEKSI ANOMALI</strong><small>Mendeteksi pola mencurigakan secara real-time</small></a>
+          <a class="flow-step flow-5" href="#incidents"><span class="flow-num">5</span><span class="flow-glyph" aria-hidden="true">⛨</span><strong>SOLUTE &amp; AUDIT</strong><small>Mengamankan data, log dan audit trail</small></a>
+          <a class="flow-step flow-6" href="#ai-panel"><span class="flow-num">6</span><span class="flow-glyph" aria-hidden="true">🧠</span><strong>ANALISIS INSIDEN</strong><small>Menganalisis dampak, memberikan rekomendasi</small></a>
+          <a class="flow-step flow-7" href="#ai-panel"><span class="flow-num">7</span><span class="flow-glyph" aria-hidden="true">⚠</span><strong>ALERT &amp; PENANGANAN</strong><small>Notifikasi, tindakan prioritas, pemulihan</small></a>
+          <a class="flow-step flow-8" href="#incidents"><span class="flow-num">8</span><span class="flow-glyph" aria-hidden="true">📄</span><strong>LAPORAN INSIDEN</strong><small>Laporan lengkap, arsip &amp; evaluasi</small></a>
+        </div>
+      </section>
+
+      <section class="modules" aria-label="Modul command center">
+        <a class="module-tile" href="#situasi"><span class="module-glyph" aria-hidden="true">📊</span><strong>DASHBOARD SITUASI</strong><small>Pantau kondisi keamanan secara real-time</small></a>
+        <a class="module-tile" href="#inventaris"><span class="module-glyph" aria-hidden="true">🗄</span><strong>INVENTARIS SATUAN</strong><small>Kelola aset &amp; logistik satuan secara terpadu</small></a>
+        <a class="module-tile" href="#map-frame"><span class="module-glyph" aria-hidden="true">🗺</span><strong>PETA INDONESIA (OFFLINE)</strong><small>Visualisasi lokasi satuan dan area operasi</small></a>
+        <a class="module-tile" href="/konsol" target="_blank" rel="noopener"><span class="module-glyph module-glyph-red" aria-hidden="true">&gt;_</span><strong>KONSOL RED TEAM</strong><small>Kelola skenario, simulasi dan pengambilan keputusan</small></a>
+        <a class="module-tile" href="#deteksi"><span class="module-glyph" aria-hidden="true">⛨</span><strong>ATURAN DETEKSI</strong><small>Deteksi otomatis &amp; pola serangan</small></a>
+        <a class="module-tile" href="#database"><span class="module-glyph" aria-hidden="true">▦</span><strong>DATABASE SQUAD &amp; ASET</strong><small>Penyimpanan aman, terpusat dan terenkripsi</small></a>
+        <a class="module-tile" href="#ai-panel"><span class="module-glyph" aria-hidden="true">📈</span><strong>ANALISIS INSIDEN</strong><small>Evaluasi data &amp; rekomendasi strategi</small></a>
+        <a class="module-tile" href="#ai-panel"><span class="module-glyph" aria-hidden="true">🔔</span><strong>ALERT &amp; PENANGANAN</strong><small>Respon cepat terhadap ancaman</small></a>
+        <a class="module-tile" href="#incidents"><span class="module-glyph" aria-hidden="true">🗒</span><strong>LAPORAN INSIDEN</strong><small>Laporan terstruktur dan arsip</small></a>
+      </section>
+
+      <footer class="footer"><span>TNI ANGKATAN DARAT <b>·</b> SATYA WIRA WICAKSANA</span><span>GARUDA SHIELD · OFFLINE DEMONSTRATOR · SELURUH NAMA ENDPOINT, STATUS, TLS, DAN LATENSI ADALAH DATA FIKTIF</span></footer>
+      </div>
     </main>
   </div>
   <!-- "Air Raid Siren" by orangefreesounds.com — CC BY 4.0, commercial use permitted -->

@@ -196,6 +196,35 @@ app.get('/konsol', (request, response) => {
   });
 });
 
+app.get('/perbaikan', (request, response) => {
+  const conditionOf = (status) => ({ online: 'NORMAL', warning: 'LATENSI TINGGI', offline: 'TIDAK MERESPONS', maintenance: 'PEMELIHARAAN' }[status] || String(status).toUpperCase());
+
+  /* Kelompokkan situs nyata berdasarkan kondisi yang perlu petunjuk perbaikan. */
+  const groups = {
+    offline: kodamSites.filter((site) => site.status === 'offline'),
+    warning: kodamSites.filter((site) => site.status === 'warning')
+  };
+
+  const mapSite = (site) => ({
+    id: site.id,
+    code: site.code,
+    name: site.name,
+    city: site.city,
+    status: site.status,
+    condition: conditionOf(site.status),
+    latency: site.latency,
+    uptime: site.uptime
+  });
+
+  return response.render('perbaikan', {
+    groups: {
+      offline: groups.offline.map(mapSite),
+      warning: groups.warning.map(mapSite)
+    },
+    checkedAt: new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date())
+  });
+});
+
 app.post('/api/serangan', (request, response) => {
   const input = request.body;
   if (!input || typeof input !== 'object') {

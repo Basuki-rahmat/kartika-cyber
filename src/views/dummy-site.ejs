@@ -17,7 +17,7 @@
     })();
   </script>
 </head>
-<body<%= attack ? ' class="under-attack"' : '' %> data-site-id="<%= site ? site.id : '' %>">
+<body<%= attack ? ' class="under-attack"' : (site && site.status === 'offline' ? ' class="is-offline"' : '') %> data-site-id="<%= site ? site.id : '' %>">
   <%= attack ? '<' + '!-- mode dampak serangan aktif saat render --' + '>' : '' %>
   <% if (attack) { %>
   <div class="attack-overlay" id="attack-overlay">
@@ -36,6 +36,27 @@
       <div class="attack-actions">
         <span class="attack-note">STATUS PEMULIHAN DIKENDALIKAN DARI DASHBOARD GARUDA SHIELD</span>
         <a class="attack-link" href="/#incidents">Lihat insiden <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </div>
+  <% } %>
+  <% if (site && site.status === 'offline' && !attack) { %>
+  <div class="offline-overlay" role="alert">
+    <div class="offline-backdrop" aria-hidden="true"></div>
+    <div class="offline-card">
+      <span class="offline-eyebrow">SIMULASI · ENDPOINT TIDAK MERESPONS</span>
+      <h2 class="offline-title">504 GATEWAY TIMEOUT</h2>
+      <p class="offline-copy">Endpoint <code>https://<%= site.id %>.test</code> tidak merespons dalam batas waktu pemeriksaan (simulasi). Halaman konten tidak disajikan karena layanan dianggap <strong>TIDAK MERESPONS</strong>. Ini adalah kondisi yang ditangani pada modul Perbaikan GARUDA SHIELD.</p>
+      <dl class="offline-facts">
+        <div><dt>KODE</dt><dd><%= site.code %></dd></div>
+        <div><dt>WILAYAH</dt><dd><%= site.city %></dd></div>
+        <div><dt>LATENSI</dt><dd>— (timeout)</dd></div>
+        <div><dt>PACKET LOSS</dt><dd>100%</dd></div>
+      </dl>
+      <div class="offline-actions">
+        <span class="offline-note">SELESAI MELALUI PULIHKAN SITUS DARI DASHBOARD</span>
+        <a class="offline-link" href="/perbaikan#perbaikan-offline">Buka petunjuk perbaikan <span aria-hidden="true">↗</span></a>
+        <a class="offline-link offline-link-ghost" href="/#sites">Dashboard <span aria-hidden="true">↗</span></a>
       </div>
     </div>
   </div>
