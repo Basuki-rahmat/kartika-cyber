@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('node:fs');
-const { randomUUID } = require('node:crypto');
+const { createHash, randomUUID, timingSafeEqual } = require('node:crypto');
 const express = require('express');
 
 try {
@@ -32,6 +32,7 @@ let activeIncidentId = null;
 const attackIdPattern = /^[A-Za-z0-9_-]{6,64}$/;
 const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 const groqApiKey = process.env.GROQ_API_KEY || '';
+const konsolApiKey = process.env.KONSOL_API_KEY || '';
 const groqModel = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const groqEndpoint = 'https://api.groq.com/openai/v1/chat/completions';
 const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -62,6 +63,15 @@ app.use((request, response, next) => {
 
 const conditionLabels = { online: 'NORMAL', warning: 'LATENSI TINGGI', offline: 'TIDAK MERESPONS', maintenance: 'PEMELIHARAAN' };
 
+/* Seluruh waktu yang ditampilkan memakai WIB eksplisit — server hosting berzona UTC. */
+const displayZone = 'Asia/Jakarta';
+function formatTime(date) {
+  return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: displayZone }).format(date);
+}
+function formatDateTime(date) {
+  return new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short', timeZone: displayZone }).format(date);
+}
+
 function buildProbeRows(sites) {
   return sites.map((site) => ({
     id: site.id,
@@ -91,7 +101,7 @@ app.get('/', (request, response) => {
       attention: kodamSites.filter((site) => ['warning', 'offline'].includes(site.status)).length,
       averageLatency: Math.round(kodamSites.filter((site) => site.latency).reduce((sum, site) => sum + site.latency, 0) / kodamSites.filter((site) => site.latency).length)
     },
-    checkedAt: new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date())
+    checkedAt: formatTime(new Date())
   });
 });
 
@@ -109,10 +119,7 @@ app.get('/situs-dummy/:siteId', (request, response) => {
   return response.render('dummy-site', {
     site,
     attack,
-    updatedAt: new Intl.DateTimeFormat('id-ID', {
-      dateStyle: 'long',
-      timeStyle: 'short'
-    }).format(new Date())
+    updatedAt: formatDateTime(new Date())
   });
 });
 
@@ -192,11 +199,85 @@ app.get('/konsol', (request, response) => {
   response.render('konsol', {
     kodamSites,
     methods: listMethods(),
-    checkedAt: new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date())
+    checkedAt: formatTime(new Date())
   });
 });
 
+app.get('/perbaikan', (request, response) => {
+  const conditionOf = (status) => ({ online: 'NORMAL', warning: 'LATENSI TINGGI', offline: 'TIDAK MERESPONS', maintenance: 'PEMELIHARAAN' }[status] || String(status).toUpperCase());
+
+  /* Kelompokkan situs nyata berdasarkan kondisi yang perlu petunjuk perbaikan. */
+  const groups = {
+    offline: kodamSites.filter((site) => site.status === 'offline'),
+    warning: kodamSites.filter((site) => site.status === 'warning')
+  };
+
+  const mapSite = (site) => ({
+    id: site.id,
+    code: site.code,
+    name: site.name,
+    city: site.city,
+    status: site.status,
+    condition: conditionOf(site.status),
+    latency: site.latency,
+    uptime: site.uptime
+  });
+
+  return response.render('perbaikan', {
+    groups: {
+      offline: groups.offline.map(mapSite),
+      warning: groups.warning.map(mapSite)
+    },
+    checkedAt: formatTime(new Date())
+  });
+});
+
+/* Konsol penyerang (CLI dari localhost) memakai header x-konsol-key bila kunci diatur.
+   Konsol browser (halaman /konsol milik aplikasi ini) diizinkan bila Origin/Referer
+   berasal dari host yang sama, sehingga tetap bekerja tanpa kunci manual. */
+function konsolAuthorized(request) {
+  if (!konsolApiKey) return true;
+  const provided = String(request.get('x-konsol-key') || '');
+  const providedHash = createHash('sha256').update(provided).digest();
+  const expectedHash = createHash('sha256').update(konsolApiKey).digest();
+  if (timingSafeEqual(providedHash, expectedHash)) return true;
+  const host = String(request.headers.host || '').toLowerCase();
+  for (const source of [request.get('origin'), request.get('referer')]) {
+    if (!source) continue;
+    try {
+      if (String(new URL(source).host).toLowerCase() === host) return true;
+    } catch (error) {
+      // Header tidak dapat diuraikan → perlakukan sebagai lintas origin.
+    }
+  }
+  return false;
+}
+
+app.get('/api/targets', (request, response) => {
+  response.json({
+    sites: kodamSites.map((site) => ({
+      id: site.id,
+      code: site.code,
+      name: site.name,
+      city: site.city,
+      lat: site.lat,
+      lng: site.lng,
+      status: site.status,
+      latency: site.latency,
+      uptime: site.uptime
+    }))
+  });
+});
+
+app.get('/api/metode', (request, response) => {
+  response.json({ methods: listMethods() });
+});
+
 app.post('/api/serangan', (request, response) => {
+  if (!konsolAuthorized(request)) {
+    return response.status(401).json({ error: 'Kunci konsol tidak valid. Kirim kunci melalui header x-konsol-key.' });
+  }
+
   const input = request.body;
   if (!input || typeof input !== 'object') {
     return response.status(400).json({ error: 'Payload harus berupa objek JSON.' });
@@ -527,11 +608,11 @@ app.get('/laporan/:attackId', (request, response) => {
       reportCode,
       networkSites,
       incidents,
-      createdAt: new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(record.createdAt))
+      createdAt: formatDateTime(new Date(record.createdAt))
     }
   });
 });
 
-app.listen(port, '127.0.0.1', () => {
+app.listen(port, process.env.HOST || '127.0.0.1', () => {
   console.log(`GARUDA SHIELD berjalan di http://localhost:${port}`);
 });

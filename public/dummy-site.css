@@ -359,6 +359,33 @@ body.under-attack .demo-ribbon { filter: none; position: relative; z-index: 1400
 .attack-link { display: inline-flex; gap: 6px; color: #111; background: #fca5a5; border-radius: 8px; padding: 9px 14px; text-decoration: none; font-weight: 700; font-size: 12.5px; }
 .attack-link:hover { background: #ef4444; color: #fff; }
 
+/* Mode endpoint TIDAK MERESPONS (offline) — simulasi gateway timeout */
+body.is-offline { overflow: hidden; }
+body.is-offline .site-header,
+body.is-offline main,
+body.is-offline .site-footer { filter: grayscale(.9) brightness(.4) blur(1.5px); pointer-events: none; user-select: none; }
+body.is-offline .demo-ribbon { filter: none; position: relative; z-index: 1400; background: #b45309; }
+.offline-overlay { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 24px; overflow: auto; }
+.offline-backdrop { position: absolute; inset: 0; background:
+  radial-gradient(1000px 420px at 50% 0%, rgba(180,83,9,.24), transparent 60%),
+  repeating-linear-gradient(0deg, rgba(0,0,0,.32) 0 2px, transparent 2px 5px),
+  rgba(11,13,10,.93); backdrop-filter: blur(3px); }
+.offline-card { position: relative; max-width: 680px; width: 100%; background: #131410; border: 1px solid #78350f; border-radius: 14px; padding: 30px 30px 22px; color: #f3f4f6; box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 6px rgba(180,83,9,.07); animation: attack-in .5s ease both; }
+.offline-eyebrow { display: inline-block; font-size: 10px; letter-spacing: .22em; color: #fbbf24; border: 1px solid rgba(251,191,36,.35); border-radius: 4px; padding: 4px 8px; margin-bottom: 14px; }
+.offline-title { margin: 0 0 12px; font-size: clamp(22px, 3.6vw, 30px); letter-spacing: .03em; font-family: Consolas, monospace; }
+.offline-copy { margin: 0 0 18px; color: #d1d5db; font-size: 13.5px; line-height: 1.65; }
+.offline-copy code { font-family: Consolas, monospace; color: #fcd34d; overflow-wrap: anywhere; }
+.offline-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 0 0 18px; }
+.offline-facts > div { border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.03); border-radius: 8px; padding: 10px 12px; }
+.offline-facts dt { font-size: 9.5px; letter-spacing: .18em; color: #9ca3af; }
+.offline-facts dd { margin: 4px 0 0; font-weight: 700; font-size: 13px; color: #fde68a; overflow-wrap: anywhere; }
+.offline-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.offline-note { font-size: 9.5px; letter-spacing: .16em; color: #9ca3af; }
+.offline-link { display: inline-flex; gap: 6px; color: #111; background: #fbbf24; border-radius: 8px; padding: 9px 14px; text-decoration: none; font-weight: 700; font-size: 12.5px; }
+.offline-link:hover { background: #f59e0b; color: #fff; }
+.offline-link-ghost { background: transparent; border: 1px solid rgba(255,255,255,.2); color: #e5e7eb; }
+.offline-link-ghost:hover { background: rgba(255,255,255,.08); color: #fff; }
+
 /* Live pulse: mode dampak yang baru muncul tanpa reload */
 body.attack-enter main { animation: page-glitch .8s steps(6) both; }
 @keyframes page-glitch {

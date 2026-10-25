@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b18">
+  <title>Petunjuk Teknis Perbaikan | GARUDA SHIELD</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/garuda.css">
+  <style>
+    .fix-main { padding: 22px 26px 48px; max-width: 1080px; }
+    .fix-crumb { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #8fa086; margin-bottom: 6px; }
+    .fix-crumb a { color: #a3e635; text-decoration: none; }
+    .fix-crumb a:hover { text-decoration: underline; }
+    .fix-title { margin: 0 0 6px; color: #f2f6ec; font-size: 26px; letter-spacing: .02em; }
+    .fix-lead { margin: 0 0 22px; max-width: 70ch; color: #b6c4ad; font-size: 13px; line-height: 1.6; }
+
+    .fix-alert { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #5d4a1c; background: #1c1708; border-left: 3px solid #ffb020; padding: 11px 14px; margin-bottom: 22px; border-radius: 4px; }
+    .fix-alert-glyph { color: #ffb020; font-size: 15px; line-height: 1.2; }
+    .fix-alert strong { display: block; color: #ffe6a8; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+    .fix-alert p { margin: 0; color: #cdbd94; font-size: 12px; line-height: 1.55; }
+
+    .fix-toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+    .fix-toc a { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid #33531e; background: #141c0e; color: #d5e0cc; font-size: 11px; letter-spacing: .04em; text-decoration: none; border-radius: 3px; transition: border-color .15s, color .15s; }
+    .fix-toc a:hover { border-color: #a3e635; color: #a3e635; }
+    .fix-toc .toc-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .toc-offline { background: #ff4d6d; }
+    .toc-warning { background: #ffb020; }
+
+    .fix-guide { margin-bottom: 34px; border: 1px solid #33531e; background: linear-gradient(160deg, #12180c 0%, #0f130a 100%); box-shadow: 0 0 22px #a3e6350d, inset 0 0 24px #0d100955; }
+    .fix-head { display: flex; align-items: center; gap: 11px; padding: 13px 16px; border-bottom: 1px solid #26381a; background: #171f10; }
+    .fix-head .fix-glyph { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid #456b28; font-size: 14px; }
+    .fix-guide.sev-offline .fix-head { background: #24101a; border-bottom-color: #5d1f31; }
+    .fix-guide.sev-offline .fix-glyph { border-color: #7a2440; color: #ff8fa8; background: #2e1420; }
+    .fix-guide.sev-warning .fix-head { background: #241d08; border-bottom-color: #5d4a1c; }
+    .fix-guide.sev-warning .fix-glyph { border-color: #7a6420; color: #ffcf6d; background: #2e2510; }
+    .fix-head h2 { margin: 0; color: #e2ead8; font-size: 13px; letter-spacing: .06em; }
+    .fix-head small { display: block; color: #8fa086; font-size: 10px; letter-spacing: .04em; margin-top: 2px; }
+
+    .fix-body { padding: 16px 18px 18px; }
+    .fix-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    @media (max-width: 720px) { .fix-cols { grid-template-columns: 1fr; } }
+    .fix-block { margin-bottom: 16px; }
+    .fix-block > h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a3e635; border-bottom: 1px solid #26381a; padding-bottom: 6px; }
+    .fix-list { margin: 0; padding: 0; list-style: none; }
+    .fix-list li { position: relative; padding-left: 16px; margin-bottom: 7px; color: #c2cfb9; font-size: 12.5px; line-height: 1.6; }
+    .fix-list li::before { content: '▸'; position: absolute; left: 0; color: #6d8a4a; }
+    .fix-list li strong { color: #e2ead8; }
+    .fix-steps { counter-reset: step; margin: 0; padding: 0; list-style: none; }
+    .fix-steps li { counter-increment: step; position: relative; padding-left: 34px; margin-bottom: 12px; color: #c2cfb9; font-size: 12.5px; line-height: 1.6; }
+    .fix-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid #456b28; color: #a3e635; background: #1d2812; font-size: 11px; font-weight: 700; border-radius: 3px; }
+    .fix-steps li strong { color: #e2ead8; }
+    .fix-cmd { display: block; margin-top: 6px; padding: 8px 11px; border: 1px solid #26381a; background: #0b0f07; color: #b6f08a; font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; border-radius: 3px; overflow-x: auto; white-space: pre; }
+
+    .fix-sites { margin-top: 4px; }
+    .fix-sites h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a3e635; border-bottom: 1px solid #26381a; padding-bottom: 6px; }
+    .fix-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .fix-table th { background: #171f10; color: #8fa086; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-align: left; padding: 7px 9px; border-bottom: 1px solid #26381a; }
+    .fix-table td { padding: 8px 9px; border-bottom: 1px solid #1a2411; color: #c2cfb9; vertical-align: middle; }
+    .fix-table tr:last-child td { border-bottom: none; }
+    .fix-table code { font-family: Consolas, monospace; color: #e2ead8; }
+    .fix-empty { padding: 12px 9px; color: #6d8a4a; font-size: 12px; font-style: italic; }
+    .fix-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+    .chip-offline-f { background: #ff4d6d22; color: #ff8fa8; border: 1px solid #7a2440; }
+    .chip-warning-f { background: #ffb02022; color: #ffcf6d; border: 1px solid #7a6420; }
+
+    .fix-escalation { border: 1px dashed #456b28; background: #141c0e; padding: 13px 16px; border-radius: 4px; }
+    .fix-escalation h3 { margin: 0 0 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a3e635; }
+    .fix-escalation p { margin: 0; color: #b6c4ad; font-size: 12px; line-height: 1.6; }
+    .fix-foot { margin-top: 26px; padding-top: 12px; border-top: 1px solid #26381a; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: #6d7b64; font-family: Consolas, monospace; font-size: 10px; letter-spacing: .02em; }
+  </style>
+</head>
+<body>
+  <main class="fix-main">
+    <nav class="fix-crumb" aria-label="Breadcrumb"><a href="/">GARUDA SHIELD</a><span>/</span><strong>Perbaikan</strong></nav>
+    <h1 class="fix-title">Petunjuk Teknis Perbaikan</h1>
+    <p class="fix-lead">Prosedur standar penanganan gangguan endpoint dummy Kodam. Panduan ini menjelaskan gejala, penyebab umum, langkah mitigasi berurutan, perintah diagnostik, serta kriteria eskalasi untuk dua kondisi kritis: <strong style="color:#ff8fa8">TIDAK MERESPONS</strong> dan <strong style="color:#ffcf6d">LATENSI TINGGI</strong>.</p>
+
+    <div class="fix-alert">
+      <span class="fix-alert-glyph" aria-hidden="true">⚠</span>
+      <div>
+        <strong>Mode Simulasi</strong>
+        <p>Semua endpoint adalah situs dummy berdomain <code>.test</code> dan pemeriksaan bersifat simulasi lokal tanpa request jaringan. Petunjuk di bawah disusun sebagai prosedur latihan operasional, bukan untuk sistem produksi nyata.</p>
+      </div>
+    </div>
+
+    <nav class="fix-toc" aria-label="Daftar panduan">
+      <a href="#perbaikan-offline"><span class="toc-dot toc-offline"></span> TIDAK MERESPONS</a>
+      <a href="#perbaikan-latensi"><span class="toc-dot toc-warning"></span> LATENSI TINGGI</a>
+    </nav>
+
+    <% const siteTable = (sites, chipClass) => { %>
+      <div class="fix-sites">
+        <h3>Situs Terdampak Saat Ini</h3>
+        <% if (sites.length === 0) { %>
+          <div class="fix-empty">Tidak ada situs dalam kondisi ini. Pemantauan normal.</div>
+        <% } else { %>
+          <table class="fix-table">
+            <thead><tr><th>KODE</th><th>SATUAN</th><th>WILAYAH</th><th>LATENSI</th><th>UPTIME</th><th>KONDISI</th></tr></thead>
+            <tbody>
+              <% sites.forEach((site) => { %>
+                <tr>
+                  <td><code><%= site.code %></code></td>
+                  <td><%= site.name %></td>
+                  <td><%= site.city %></td>
+                  <td><%= site.latency === null ? '—' : `${site.latency} ms` %></td>
+                  <td><%= site.uptime %></td>
+                  <td><span class="fix-chip <%= chipClass %>"><%= site.condition %></span></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    <% } %>
+
+    <!-- ============ TIDAK MERESPONS ============ -->
+    <section class="fix-guide sev-offline" id="perbaikan-offline">
+      <header class="fix-head">
+        <span class="fix-glyph" aria-hidden="true">✕</span>
+        <div><h2>TIDAK MERESPONS</h2><small>Endpoint timeout · nol respons · packet loss 100%</small></div>
+      </header>
+      <div class="fix-body">
+        <div class="fix-cols">
+          <div>
+            <div class="fix-block">
+              <h3>Gejala</h3>
+              <ul class="fix-list">
+                <li>Respons HTTP berstatus <strong>TIMEOUT</strong>, tidak ada kode balikan.</li>
+                <li>Latensi tidak terukur (—) dan packet loss tercatat <strong>100%</strong>.</li>
+                <li>TLS/kolom sertifikat kosong karena handshake tidak pernah selesai.</li>
+                <li>Titik peta berubah menjadi status <strong>siaga penuh</strong>.</li>
+              </ul>
+            </div>
+            <div class="fix-block">
+              <h3>Penyebab Umum</h3>
+              <ul class="fix-list">
+                <li><strong>Layanan mati</strong> — proses web/daemon endpoint tidak berjalan.</li>
+                <li><strong>Kebijakan blokir</strong> — firewall memutus akses dari pusat.</li>
+                <li><strong>Kegagalan rute</strong> — jalur transit atau DNS terputus.</li>
+                <li><strong>Overload</strong> — resource habis sehingga berhenti melayani.</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <div class="fix-block">
+              <h3>Langkah Penanganan</h3>
+              <ol class="fix-steps">
+                <li><strong>Konfirmasi cakupan.</strong> Periksa apakah hanya satu titik atau beberapa titik sekaligus untuk membedakan gangguan lokal vs terpusat.</li>
+                <li><strong>Uji konektivitas dasar.</strong> Pastikan host hidup sebelum menyimpulkan aplikasi.
+                  <code class="fix-cmd">ping -c 4 &lt;endpoint&gt;
+traceroute &lt;endpoint&gt;</code></li>
+                <li><strong>Cek layanan &amp; port.</strong> Verifikasi proses dan port yang mendengarkan.
+                  <code class="fix-cmd">systemctl status &lt;layanan&gt;
+ss -tulpn | grep :80
+ss -tulpn | grep :443</code></li>
+                <li><strong>Periksa firewall/blokir.</strong> Pastikan rantai aturan tidak memutus akses masuk.
+                  <code class="fix-cmd">iptables -L -n | head -30
+ufw status</code></li>
+                <li><strong>Tinjau log terakhir.</strong> Cari penyebab matinya layanan.
+                  <code class="fix-cmd">journalctl -u &lt;layanan&gt; -n 50 --no-pager</code></li>
+                <li><strong>Start &amp; uji ulang.</strong> Nyalakan kembali layanan lalu jalankan pemeriksaan ulang dari dashboard.
+                  <code class="fix-cmd">systemctl restart &lt;layanan&gt;
+systemctl enable --now &lt;layanan&gt;</code></li>
+                <li><strong>Validasi pemulihan.</strong> Pastikan respons kembali <strong>200</strong>, TLS terisi, dan packet loss turun ke 0%.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        <%- siteTable(groups.offline, 'chip-offline-f') %>
+      </div>
+    </section>
+
+    <!-- ============ LATENSI TINGGI ============ -->
+    <section class="fix-guide sev-warning" id="perbaikan-latensi">
+      <header class="fix-head">
+        <span class="fix-glyph" aria-hidden="true">⏱</span>
+        <div><h2>LATENSI TINGGI</h2><small>Respons lambat · latensi &gt; 500 ms · packet loss 6%</small></div>
+      </header>
+      <div class="fix-body">
+        <div class="fix-cols">
+          <div>
+            <div class="fix-block">
+              <h3>Gejala</h3>
+              <ul class="fix-list">
+                <li>Respons HTTP berkode <strong>503</strong> atau balikan lambat.</li>
+                <li>Latensi tercatat jauh di atas ambang normal (mis. 700–900 ms).</li>
+                <li>Packet loss kecil tercatat (mis. 6%) pada kolom paket.</li>
+                <li>TLS masih terisi namun versi lebih rendah (<strong>TLS 1.2</strong>).</li>
+              </ul>
+            </div>
+            <div class="fix-block">
+              <h3>Penyebab Umum</h3>
+              <ul class="fix-list">
+                <li><strong>Kongesti jaringan</strong> — lalu lintas memenuhi jalur transmisi.</li>
+                <li><strong>Resource server tinggi</strong> — CPU/RAM/disk mendekati batas.</li>
+                <li><strong>Perangkat lunak usang</strong> — versi TLS/layanan lambat.</li>
+                <li><strong>Jarak &amp; routing</strong> — rute tidak optimal antar wilayah.</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <div class="fix-block">
+              <h3>Langkah Penanganan</h3>
+              <ol class="fix-steps">
+                <li><strong>Kuantifikasi latensi.</strong> Ukur waktu tempuh per paket untuk memastikan ini konsisten.
+                  <code class="fix-cmd">ping -c 20 &lt;endpoint&gt;</code></li>
+                <li><strong>Identifikasi titik lemah.</strong> Lihat di segmen mana delay menumpuk.
+                  <code class="fix-cmd">mtr --report &lt;endpoint&gt;
+traceroute &lt;endpoint&gt;</code></li>
+                <li><strong>Periksa beban server.</strong> Pastikan resource tidak menjadi hambatan.
+                  <code class="fix-cmd">uptime
+top -bn1 | head -15
+df -h</code></li>
+                <li><strong>Cek koneksi aktif.</strong> Deteksi lonjakan koneksi yang menahan resource.
+                  <code class="fix-cmd">ss -s
+netstat -an | grep ESTABLISHED | wc -l</code></li>
+                <li><strong>Optimasi konfigurasi.</strong> Aktifkan caching, kompresi, atau perbarui TLS ke 1.3.
+                  <code class="fix-cmd">nginx -t &amp;&amp; systemctl reload nginx
+openssl s_client -connect &lt;endpoint&gt;:443 -tls1_3 &lt;/dev/null</code></li>
+                <li><strong>Mitigasi kongesti.</strong> Bila beban jaringan tinggi, pertimbangkan pembatasan rate atau perluasan bandwidth.</li>
+                <li><strong>Uji ulang &amp; pantau.</strong> Jalankan pemeriksaan ulang dan pastikan latensi turun di bawah ambang normal.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        <%- siteTable(groups.warning, 'chip-warning-f') %>
+      </div>
+    </section>
+
+    <div class="fix-escalation">
+      <h3>Kriteria Eskalasi</h3>
+      <p>ESKALASI ke koordinator jika: gangguan berlangsung <strong>&gt; 30 menit</strong> setelah langkah mitigasi, menyangkut <strong>lebih dari 3 titik</strong> sekaligus, atau terindikasi aktivitas berbahaya (serangan simulasi aktif). Sertakan hasil diagnostik, tangkapan log, dan waktu kejadian saat melapor.</p>
+    </div>
+
+    <footer class="fix-foot">
+      <span>GARUDA SHIELD · PETUNJUK TEKNIS PERBAIKAN</span>
+      <span>DIPERBARUI <%= checkedAt %> · DATA SIMULASI LOKAL</span>
+    </footer>
+  </main>
+</body>
+</html>
