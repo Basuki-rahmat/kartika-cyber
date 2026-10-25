@@ -5,9 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101b18">
   <title>GARUDA SHIELD | TNI AD Cyber Command Center</title>
+  <meta name="description" content="Dashboard peta &amp; konsol simulasi pertahanan siber TNI AD — deteksi, analisis AI, dan penangkalan insiden IT/OT (data demo Kartika Cyber 2026).">
+  <meta name="theme-color" content="#101b18">
+  <link rel="canonical" href="https://value.id.fadlanbersaudara.com/">
+  <!-- Open Graph: tampilan saat link dibagikan ke medsos / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GARUDA SHIELD">
+  <meta property="og:title" content="GARUDA SHIELD — Kartika Cyber 2026">
+  <meta property="og:description" content="Dashboard peta &amp; konsol simulasi pertahanan siber TNI AD: deteksi insiden IT/OT, analisis AI, dan penangkalan. Purwarupa kategori Defensive Shield (data demo).">
+  <meta property="og:url" content="https://value.id.fadlanbersaudara.com/">
+  <meta property="og:image" content="https://value.id.fadlanbersaudara.com/og-image.png">
+  <meta property="og:image:url" content="https://value.id.fadlanbersaudara.com/og-image.png">
+  <meta property="og:image:secure_url" content="https://value.id.fadlanbersaudara.com/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="GARUDA SHIELD — purwarupa pertahanan siber TNI AD, Kartika Cyber 2026">
+  <meta property="og:locale" content="id_ID">
+  <!-- Twitter/X (membaca tag nama sendiri) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GARUDA SHIELD — Kartika Cyber 2026">
+  <meta name="twitter:description" content="Dashboard peta &amp; konsol simulasi pertahanan siber TNI AD: deteksi insiden IT/OT, analisis AI, dan penangkalan.">
+  <meta name="twitter:image" content="https://value.id.fadlanbersaudara.com/og-image.png">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="/garuda.css">
+  <link rel="stylesheet" href="/garuda.css?v=4">
 </head>
 <body class="rail-collapsed">
   <div class="shell">
@@ -38,7 +60,7 @@
     <main class="main">
       <header class="topbar">
         <div class="crumb"><span>TNI AD</span><i>/</i><strong>Cyber Command Center</strong></div>
-        <div class="topbar-status"><span class="offline-badge"><span></span> PETA OFFLINE</span><span class="topbar-time" id="clock"><%= checkedAt %></span><button class="alarm-button" id="alarm-toggle" type="button" hidden aria-pressed="true">ALARM ON</button><span class="operator"><span class="operator-avatar">OP</span><span>Operator demo</span></span></div>
+        <div class="topbar-status"><span class="offline-badge"><span></span> PETA OFFLINE</span><span class="topbar-time" id="clock"><%= checkedAt %></span><button class="alarm-button" id="alarm-toggle" type="button" aria-pressed="false">ALARM SIAP</button><span class="cmd-loc" id="cmd-loc" hidden>◈ POS KOMANDO</span><span class="operator"><span class="operator-avatar">OP</span><span>Operator demo</span></span></div>
       </header>
 
       <section class="cc-header" aria-label="Kepala pusat komando siber">
@@ -85,21 +107,21 @@
               <div class="stat-main"><strong data-value><%= personelAktif %></strong><span class="stat-delta <%= personelDelta < 0 ? 'delta-down' : 'delta-up' %>"><%= personelDelta < 0 ? '▼' : '▲' %> <%= Math.abs(personelDelta) %></span></div>
               <small>Personel Dikerahkan</small>
               <div class="stat-sub"><%= personelTotal %> terdaftar · <%= personelAktif %> siaga</div>
-              <div class="stat-bar"><i style="width: <%= Math.round((personelAktif / personelTotal) * 100) %>%"></i></div>
+              <div class="stat-bar"><i data-width="<%= Math.round((personelAktif / personelTotal) * 100) %>"></i></div>
             </div>
             <div class="stat-chip chip-insiden" data-tick="insiden">
               <span class="stat-glyph">⚠</span>
               <div class="stat-main"><strong data-value><%= insidenAktif %></strong><span class="stat-delta <%= insidenKritis > 0 ? 'delta-crit' : 'delta-down' %>"><%= insidenKritis > 0 ? `${insidenKritis} KRITIS` : '▼ stabil' %></span></div>
               <small>Insiden Aktif</small>
               <div class="stat-sub"><%= stats.event_count || 0 %> event · 24 jam</div>
-              <div class="stat-bar"><i style="width: <%= Math.min(100, insidenAktif * 12) %>%"></i></div>
+              <div class="stat-bar"><i data-width="<%= Math.min(100, insidenAktif * 12) %>"></i></div>
             </div>
             <div class="stat-chip chip-status" data-tick="status" data-base="<%= statusPct %>">
               <span class="stat-glyph">✓</span>
               <div class="stat-main"><strong data-value><%= totals.online %>/<%= totals.sites %></strong><span class="stat-delta <%= statusPct >= 80 ? 'delta-up' : 'delta-down' %>"><%= statusPct >= 80 ? '▲' : '▼' %> <%= statusPct %>%</span></div>
               <small>Situs Online</small>
               <div class="stat-sub">rata-rata <%= totals.averageLatency %> ms</div>
-              <div class="stat-bar"><i style="width: <%= statusPct %>%"></i></div>
+              <div class="stat-bar"><i data-width="<%= statusPct %>"></i></div>
             </div>
           </div>
           <p class="chart-label">Tren Situasi (24 Jam)</p>
@@ -284,7 +306,7 @@
                   <td class="probe-endpoint"><span class="table-site-dot status-<%= row.status %>"></span><strong><%= row.code %></strong><span class="table-city"><%= row.city %></span></td>
                   <td class="probe-response"><span class="resp-badge resp-<%= row.status %>" data-response><%= row.responseCode %></span><% if (row.maintenance) { %><span class="resp-note">PEMELIHARAAN</span><% } %></td>
                   <td class="probe-tls" data-tls><%= row.tls %></td>
-                  <td class="probe-latency"><span class="lat-value" data-latency><%= row.latency === null ? '—' : `${row.latency} ms` %></span><span class="lat-bar"><i data-lat-bar style="width: <%= row.latency === null ? 100 : Math.min(100, Math.round(row.latency / 9)) %>%"></i></span></td>
+                  <td class="probe-latency"><span class="lat-value" data-latency><%= row.latency === null ? '—' : `${row.latency} ms` %></span><span class="lat-bar"><i data-lat-bar data-width="<%= row.latency === null ? 100 : Math.min(100, Math.round(row.latency / 9)) %>"></i></span></td>
                   <td class="probe-loss" data-loss><%= row.packetLoss %>%</td>
                   <td class="probe-checked" data-checked>—</td>
                   <td class="probe-condition"><span class="condition condition-<%= row.status %>" data-condition><%= row.condition %></span></td>
@@ -328,8 +350,25 @@
   </div>
   <!-- "Air Raid Siren" by orangefreesounds.com — CC BY 4.0, commercial use permitted -->
   <audio id="alarm-audio" src="/air-raid-siren.mp3" loop preload="auto"></audio>
+  <div class="perm-overlay" id="perm-overlay" hidden>
+    <div class="perm-card">
+      <span class="perm-glyph">▣</span>
+      <h2>GARUDA SHIELD · MODE DEMONSTRASI</h2>
+      <p>Berikan izin browser untuk pengalaman demonstrasi penuh:</p>
+      <ul class="perm-list">
+        <li><strong>Sirene alarm</strong> — diputar otomatis saat serangan simulasi terdeteksi</li>
+        <li><strong>Notifikasi</strong> — muncul di luar tab ketika serangan masuk</li>
+        <li><strong>Lokasi pos komando (GPS)</strong> — hanya ditampilkan pada label pos komando, tidak dikirim ke server</li>
+      </ul>
+      <div class="perm-actions">
+        <button class="perm-primary" id="perm-allow" type="button">IZINKAN &amp; MULAI</button>
+        <button class="perm-skip" id="perm-skip" type="button">LANJUT TANPA IZIN</button>
+      </div>
+      <small>Semua izin hanya untuk halaman ini dan tidak menyertakan data ke server. Bila browser menampilkan popup izin, pilih "Izinkan".</small>
+    </div>
+  </div>
   <script id="site-data" type="application/json"><%- JSON.stringify(kodamSites) %></script>
   <script src="/vendor/leaflet/leaflet.js" defer></script>
-  <script src="/garuda.js" defer></script>
+  <script src="/garuda.js?v=6" defer></script>
 </body>
 </html>

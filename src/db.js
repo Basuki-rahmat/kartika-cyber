@@ -109,7 +109,12 @@ function refreshAlerts() {
 }
 
 function loadDemoEvents() {
-  const demoEvents = JSON.parse(fs.readFileSync(path.join(dataDirectory, 'demo-events.json'), 'utf8'));
+  const demoEventsPath = path.join(dataDirectory, 'demo-events.json');
+  if (!fs.existsSync(demoEventsPath)) {
+    console.log('data/demo-events.json tidak tersedia — melewati seed data demo.');
+    return;
+  }
+  const demoEvents = JSON.parse(fs.readFileSync(demoEventsPath, 'utf8'));
   const insert = database.prepare(`
     INSERT INTO events (id, asset_id, zone, source_zone, target_zone, source, account, event_type, occurred_at, approved, maintenance_window, payload)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

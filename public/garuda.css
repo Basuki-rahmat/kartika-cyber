@@ -2242,19 +2242,32 @@ h1 em {
 /* Incident alarm control */
 .alarm-button {
     padding: 5px 10px;
-    border: 1px solid #7a2440;
+    border: 1px solid #3a5233;
     border-radius: 4px;
-    color: #ffd0de;
-    background: #2a1220;
+    color: #b9d3ae;
+    background: #171f13;
     cursor: pointer;
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: .08em;
-    animation: alarm-blink 1.1s ease-in-out infinite;
 }
 
 .alarm-button[hidden] {
     display: none;
+}
+
+.alarm-button.on {
+    border-color: #7a2440;
+    color: #ffd0de;
+    background: #2a1220;
+    animation: alarm-blink 1.1s ease-in-out infinite;
+}
+
+.alarm-button.ready {
+    border-color: #2d4a2a;
+    color: #c6e2ba;
+    background: #1a2314;
+    animation: none;
 }
 
 .alarm-button.muted {
@@ -2274,6 +2287,145 @@ h1 em {
     50% {
         opacity: .45;
     }
+}
+
+/* Origin attacker pada peta (trace serangan) */
+.attack-origin-marker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.attack-origin-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--attack-color, #ff4d6d);
+    border: 2px solid #0b1117;
+    box-shadow: 0 0 8px var(--attack-color, #ff4d6d);
+    flex: none;
+}
+
+.attack-origin-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    color: #ffe3ea;
+    background: rgba(18, 8, 13, .85);
+    border: 1px solid var(--attack-color, #ff4d6d);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Gate izin demonstrasi */
+.perm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 7, 12, .82);
+    backdrop-filter: blur(3px);
+}
+
+.perm-card {
+    width: min(420px, calc(100vw - 40px));
+    border: 1px solid #7a2440;
+    background: #0d1118;
+    color: #cfe0d6;
+    padding: 22px 24px;
+    font-family: var(--mono);
+    text-align: center;
+}
+
+.perm-glyph {
+    display: block;
+    font-size: 26px;
+    color: #ff6d8d;
+    margin-bottom: 6px;
+}
+
+.perm-card h2 {
+    font-size: 14px;
+    letter-spacing: .1em;
+    color: #ffd0de;
+    margin: 0 0 10px;
+}
+
+.perm-card p,
+.perm-card small {
+    font-size: 10px;
+    color: #8ea39a;
+}
+
+.perm-list {
+    list-style: none;
+    margin: 10px 0 14px;
+    padding: 0;
+    text-align: left;
+    font-size: 11px;
+}
+
+.perm-list li {
+    padding: 5px 0;
+    border-bottom: 1px dashed #26303c;
+    color: #cfe0d6;
+}
+
+.perm-list strong {
+    color: #ffccd8;
+}
+
+.perm-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0 10px;
+}
+
+.perm-primary,
+.perm-skip {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.perm-primary {
+    border: 1px solid #932c4c;
+    background: #57182c;
+    color: #ffe3ea;
+}
+
+.perm-skip {
+    border: 1px solid #33424e;
+    background: #0f1620;
+    color: #7f8f9c;
+}
+
+.perm-card small {
+    display: block;
+    line-height: 1.6;
+}
+
+/* Badge pos komando (geolokasi) di topbar */
+.cmd-loc {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    color: #9fd8a8;
+    border: 1px solid #2b4030;
+    background: #141d13;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.cmd-loc[hidden] {
+    display: none;
 }
 
 /* AI remediation performance panel */

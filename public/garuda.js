@@ -231,6 +231,70 @@ function showAttackAlert(attack, level) {
   if (closeButton) closeButton.onclick = () => { alertElement.hidden = true; };
 }
 
+/* Trace serangan: asal penyerang → target, disertai lingkaran ketidakpastian
+   sesuai tingkat keyakinan lokasi (permit alaiiha)? rendah = radius luas. */
+let attackTraceGroup = null;
+
+function arcPoints(from, to, samples = 40) {
+  const [lat1, lng1] = from;
+  const [lat2, lng2] = to;
+  const points = [];
+  for (let index = 0; index <= samples; index += 1) {
+    const t = index / samples;
+    const lat = lat1 + (lat2 - lat1) * t;
+    const lng = lng1 + (lng2 - lng1) * t + Math.sin(Math.PI * t) * (Math.abs(lat2 - lat1) + 8) * 0.14;
+    points.push([lat, lng]);
+  }
+  return points;
+}
+
+function drawAttackTrace(attack, level) {
+  if (attackTraceGroup) {
+    map.removeLayer(attackTraceGroup);
+    attackTraceGroup = null;
+  }
+  const origin = attack.attacker || {};
+  const originLat = Number(origin.lat);
+  const originLng = Number(origin.lng);
+  const originIp = typeof origin.ip === 'string' ? origin.ip : '';
+  const target = [attack.site.lat, attack.site.lng];
+  const color = attackColor[level] || '#ff4d6d';
+
+  if (!Number.isFinite(originLat) || !Number.isFinite(originLng) || !originIp) return;
+
+  attackTraceGroup = L.layerGroup().addTo(map);
+  const confidence = Math.max(0, Math.min(100, Number(origin.confidence) || 50));
+  const uncertainRadius = (300 + (100 - confidence) * 9) * 1000;
+
+  L.circle([originLat, originLng], {
+    radius: uncertainRadius, color, weight: 1, opacity: 0.55,
+    fillColor: color, fillOpacity: 0.12, dashArray: '4 6', interactive: false
+  }).addTo(attackTraceGroup);
+
+  const flags = [origin.vpn ? 'VPN' : '', origin.tor ? 'TOR' : '', origin.proxy ? 'PROXY' : ''].filter(Boolean).join(' · ');
+  const originPopup = `<div class="attack-popup-inner">
+      <span class="attack-popup-head">ASAL SERANGAN (SIMULASI)</span>
+      <strong class="attack-popup-title">${escapeHtml(origin.location || originIp)}</strong>
+      <div class="attack-popup-det"><span class="attack-sev attack-sev-medium">KEYAKINAN</span><span class="attack-popup-det-title">${confidence}% · radius ${Math.round(uncertainRadius / 1000)} km</span></div>
+      ${origin.provider ? `<div class="attack-popup-det-title">${escapeHtml(origin.provider)}</div>` : ''}
+      ${flags ? `<div class="attack-popup-det"><span class="attack-sev attack-sev-low">ANONIM</span><span class="attack-popup-det-title">${flags}</span></div>` : ''}
+      <div class="attack-popup-det-title">Posisi tampak bersifat simulasi; alamat asli tidak dapat dipastikan.</div>
+    </div>`;
+
+  L.marker([originLat, originLng], {
+    icon: L.divIcon({
+      className: 'attack-origin-icon',
+      html: `<span class="attack-origin-marker" style="--attack-color:${color}"><span class="attack-origin-dot"></span><span class="attack-origin-label">ASAL SERANGAN · ${escapeHtml(originIp)}</span></span>`,
+      iconSize: [0, 0]
+    }),
+    zIndexOffset: 1100
+  }).addTo(attackTraceGroup).bindPopup(originPopup, { className: 'attack-popup', maxWidth: 300, autoPan: true, offset: [0, -6] });
+
+  L.polyline(arcPoints([originLat, originLng], target), {
+    color, weight: 2, opacity: 0.9, dashArray: '6 8', interactive: false
+  }).addTo(attackTraceGroup);
+}
+
 function renderAttack(attack) {
   const site = attack.site;
   if (!site || typeof site.lat !== 'number') return;
@@ -252,6 +316,8 @@ function renderAttack(attack) {
     zIndexOffset: 1200,
     interactive: false
   }).addTo(map);
+
+  drawAttackTrace(attack, level);
 
   const detections = attack.detections.length
     ? attack.detections.map((detection) => `<div class="attack-popup-det"><span class="attack-sev attack-sev-${escapeHtml(detection.severity)}">${escapeHtml(severityLabel(detection.severity))}</span><span class="attack-popup-rule">${escapeHtml(detection.ruleId)}</span><span class="attack-popup-det-title">${escapeHtml(detection.title)}</span></div>`).join('')
@@ -276,12 +342,14 @@ function renderAttack(attack) {
   startAlarm();
   markProbeAttack(attack);
   runAiAnalysis(attack);
+  notifyAttack(attack);
 }
 
 /* Incident alarm — file sirine serangan udara (mp3 loop); fallback Web Audio wail naik-turun */
 const alarmAudio = document.querySelector('#alarm-audio');
 const alarmButton = document.querySelector('#alarm-toggle');
 let alarmMuted = false;
+let alarmPrimed = false;
 try { alarmMuted = localStorage.getItem('garuda-alarm-muted') === '1'; } catch (error) {}
 
 let alarmCtx = null;
@@ -350,13 +418,19 @@ function cleanupSiren() {
 
 function updateAlarmButton(active) {
   if (!alarmButton) return;
+  alarmButton.hidden = false;
   if (!active) {
-    alarmButton.hidden = true;
+    /* Standby: tombol tetap tampil — ALARM SIAP sebelum/ALARM NONAKTIF bila dimatikan. */
+    alarmButton.classList.remove('blocked', 'on');
+    alarmButton.classList.toggle('muted', alarmMuted);
+    alarmButton.classList.toggle('ready', alarmPrimed && !alarmMuted);
+    alarmButton.setAttribute('aria-pressed', String(!alarmMuted));
+    alarmButton.textContent = alarmMuted ? 'ALARM NONAKTIF' : 'ALARM SIAP';
     return;
   }
-  alarmButton.hidden = false;
   alarmButton.classList.toggle('muted', alarmMuted);
   alarmButton.classList.remove('blocked');
+  alarmButton.classList.toggle('on', !alarmMuted);
   alarmButton.setAttribute('aria-pressed', String(!alarmMuted));
   alarmButton.textContent = alarmMuted ? 'ALARM OFF' : 'ALARM ON';
 }
@@ -392,20 +466,119 @@ function stopAlarm() {
 
 if (alarmButton) {
   alarmButton.addEventListener('click', () => {
-    const active = sirenRunning() || (alarmAudio && !alarmAudio.paused);
-    if (!active && !alarmMuted) {
-      startAlarm();
+    const playing = sirenRunning() || (alarmAudio && !alarmAudio.paused);
+    if (playing) {
+      /* Sirene berbunyi: klik menonaktifkan (mute, tersimpan antar sesi). */
+      alarmMuted = true;
+      try { localStorage.setItem('garuda-alarm-muted', '1'); } catch (error) {}
+      stopAlarm();
       return;
     }
-    alarmMuted = !alarmMuted;
-    try { localStorage.setItem('garuda-alarm-muted', alarmMuted ? '1' : '0'); } catch (error) {}
     if (alarmMuted) {
-      stopSiren(true);
-      if (alarmAudio) alarmAudio.pause();
+      /* Dari keadaan nonaktif: buka kembali jalur suara; saat insiden masih aktif langsung bunyi lagi. */
+      alarmMuted = false;
+      try { localStorage.setItem('garuda-alarm-muted', '0'); } catch (error) {}
+      primeAlarm();
+      if (activeAttack && !activeAttack.resolved) startAlarm();
+      else updateAlarmButton(false);
+      return;
     }
-    if (!alarmMuted) startAlarm();
-    updateAlarmButton(true);
+    if (!alarmPrimed) {
+      /* Standby klik pertama: buka jalur suara tanpa bunyi. */
+      primeAlarm();
+      updateAlarmButton(false);
+      return;
+    }
+    /* Primer terbuka: klik menyala-kan sirene uji manual; klik lagi untuk mute. */
+    startAlarm();
   });
+}
+
+/* Unlock autoplay: kebijakan browser hanya mengizinkan suara setelah pengguna
+   berinteraksi. Pada interaksi pertama (klik/sentuh/tekan), jika insiden masih
+   aktif, sirine langsung dinyalakan oleh gestur tersebut. */
+function primeAlarm() {
+  if (alarmCtx) {
+    if (alarmCtx.state === 'suspended') {
+      alarmCtx.resume().then(() => { alarmPrimed = true; if (!sirenRunning()) updateAlarmButton(false); }).catch(() => {});
+    } else alarmPrimed = true;
+  }
+  if (!alarmAudio || !alarmAudio.paused) return;
+  const restoreVolume = alarmAudio.volume;
+  alarmAudio.volume = 0;
+  alarmAudio.play().then(() => {
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+    alarmAudio.volume = restoreVolume;
+    alarmPrimed = true;
+    if (!sirenRunning()) updateAlarmButton(false);
+  }).catch(() => { alarmAudio.volume = restoreVolume; });
+}
+
+function alarmUnlockAttempt() {
+  primeAlarm();
+  if (activeAttack && !activeAttack.resolved) startAlarm();
+}
+
+document.addEventListener('pointerdown', alarmUnlockAttempt, { once: true });
+document.addEventListener('keydown', alarmUnlockAttempt, { once: true });
+
+/* Gate izin demonstrasi: saat juri membuka halaman, sekali klik memakai gestur
+   untuk membuka audio (prime), meminta GPS, dan meminta izin notifikasi. */
+(() => {
+  const overlay = document.querySelector('#perm-overlay');
+  if (!overlay) return;
+  const allowButton = document.querySelector('#perm-allow');
+  const skipButton = document.querySelector('#perm-skip');
+  const locBadge = document.querySelector('#cmd-loc');
+
+  function closeOverlay(denied) {
+    overlay.hidden = true;
+    try { localStorage.setItem('garuda-perm-choice', denied ? 'skip' : 'allow'); } catch (error) {}
+  }
+
+  function confirmPermission() {
+    closeOverlay(false);
+    primeAlarm();
+    if ('Notification' in window && Notification.permission === 'default') {
+      try { Notification.requestPermission().catch(() => {}); } catch (error) {}
+    }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        if (locBadge) {
+          locBadge.hidden = false;
+          locBadge.textContent = `◈ POS KOMANDO · ${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`;
+        }
+        try {
+          localStorage.setItem('garuda-command-location', JSON.stringify({
+            lat: position.coords.latitude, lng: position.coords.longitude, at: Date.now()
+          }));
+        } catch (storageError) {}
+      }, () => {}, { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 });
+    }
+  }
+
+  function maybeShowOverlay() {
+    let choice = '';
+    try { choice = localStorage.getItem('garuda-perm-choice') || ''; } catch (error) {}
+    if (choice) return;
+    overlay.hidden = false;
+  }
+
+  if (allowButton) allowButton.addEventListener('click', confirmPermission);
+  if (skipButton) skipButton.addEventListener('click', () => closeOverlay(true));
+  maybeShowOverlay();
+})();
+
+/* Notifikasi serangan (butuh izin Notification di gate atas) */
+function notifyAttack(attack) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    new Notification(`SERANGAN SIMULASI · ${attack.method.code}`, {
+      body: `${attack.method.name} → ${attack.site.name} · ${attack.detections.length} alert`,
+      tag: 'garuda-attack'
+    });
+  } catch (error) {}
 }
 
 function delay(ms) {
@@ -429,6 +602,10 @@ function stopAttackAnimation() {
   if (activeAttackMarker) {
     map.removeLayer(activeAttackMarker);
     activeAttackMarker = null;
+  }
+  if (attackTraceGroup) {
+    map.removeLayer(attackTraceGroup);
+    attackTraceGroup = null;
   }
   map.closePopup();
   const frame = document.querySelector('#map-frame');
@@ -670,6 +847,7 @@ function loadAttack(id, focus = true) {
       })
       .then((attack) => {
         if (attack.resolved) return;
+        viewedAttackId = attack.id;
         renderAttack(attack);
         if (focus) focusMapTab();
       })
@@ -707,6 +885,29 @@ if (initialAttackId) {
     })
     .catch(() => {});
 }
+
+/* Polling insiden aktif: serangan yang diluncurkan dari konsol CLI (sumber
+   lintas-origin, tidak bisa memakai BroadcastChannel) tetap tampil otomatis
+   di dashboard yang sudah terbuka — tanpa refresh halaman. */
+let viewedAttackId = initialAttackId || null;
+setInterval(() => {
+  fetch('/api/insiden-aktif')
+    .then((response) => (response.ok ? response.json() : { active: null }))
+    .then((data) => {
+      const active = data && data.active;
+      if (active && typeof active.id === 'string' && !active.resolved) {
+        if (active.id !== viewedAttackId) loadAttack(active.id, true);
+        return;
+      }
+      /* Direlewasi dari luar (CLI 'pulihkan' atau diatasi dari sisi lain) →
+         hentikan animasi + sirine pada dashboard. */
+      if (!active && viewedAttackId && activeAttack && !activeAttack.resolved) {
+        viewedAttackId = null;
+        stopAttackAnimation();
+      }
+    })
+    .catch(() => {});
+}, 2000);
 
 /* Site probe simulation */
 const probeBody = document.querySelector('#probe-body');
@@ -939,6 +1140,12 @@ setInterval(probeTick, 1000);
   });
 })();
 /* Denyut angka Dashboard Situasi agar terasa hidup (simulasi, fluktuasi kecil) */
+/* Lebar bar dari server (atribut data-width) diterapkan saat halaman dimuat. */
+(() => {
+  document.querySelectorAll('[data-width]').forEach((bar) => {
+    bar.style.width = `${bar.dataset.width || 0}%`;
+  });
+})();
 (() => {
   const personelChip = document.querySelector('.stat-chip[data-tick="personel"]');
   if (!personelChip) return;
