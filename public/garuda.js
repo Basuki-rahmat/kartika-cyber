@@ -1,7 +1,9 @@
 const siteData = JSON.parse(document.querySelector('#site-data').textContent);
 const siteRows = [...document.querySelectorAll('.site-row')];
+const siteById = new Map(siteData.map((site) => [site.id, site]));
 const mapFrame = document.querySelector('#map-frame');
 let activeFilter = 'all';
+let activeRegion = 'all';
 let searchTerm = '';
 const markers = new Map();
 const map = L.map('map', {
@@ -34,7 +36,7 @@ function fitMapToEdges() {
 if (typeof ResizeObserver !== 'undefined') {
   const mapResizeObserver = new ResizeObserver(() => {
     map.invalidateSize({ animate: false });
-    if (provinceBounds && !mapUserMoved) fitMapToEdges();
+    if (provinceBounds && !mapUserMoved) fitRegion(activeRegion, false);
   });
   mapResizeObserver.observe(mapFrame);
 }
@@ -45,6 +47,30 @@ const statusNames = {
   offline: 'OFFLINE',
   maintenance: 'MAINTENANCE'
 };
+
+/* Wilayah operasional diturunkan dari koordinat situs, bukan daftar tetap,
+   sehingga tetap benar bila data situs berubah. */
+const regionNames = {
+  all: 'NASIONAL',
+  sumatera: 'SUMATERA',
+  jawa: 'JAWA',
+  kalimantan: 'KALIMANTAN',
+  sulawesi: 'SULAWESI',
+  bali: 'BALI–NUSA',
+  maluku: 'MALUKU',
+  papua: 'PAPUA'
+};
+
+function regionOf(site) {
+  const { lat, lng } = site;
+  if (lng >= 130) return 'papua';
+  if (lng >= 125.5) return 'maluku';
+  if (lng >= 118.5 && lat > -6.5) return 'sulawesi';
+  if (lng >= 114.5 && lat <= -8) return 'bali';
+  if (lng >= 108.5 && lng < 118.5 && lat > -5) return 'kalimantan';
+  if (lng >= 105 && lat <= -5.5) return 'jawa';
+  return 'sumatera';
+}
 
 function selectSite(siteId) {
   const site = siteData.find((candidate) => candidate.id === siteId);
@@ -73,11 +99,13 @@ function applyFilters() {
   let visibleCount = 0;
   siteRows.forEach((row) => {
     const status = row.dataset.status;
+    const site = siteById.get(row.dataset.siteId);
     const matchesFilter = activeFilter === 'all'
       || (activeFilter === 'attention' && ['warning', 'offline'].includes(status))
       || status === activeFilter;
     const matchesSearch = row.dataset.name.toLowerCase().includes(searchTerm);
-    const visible = matchesFilter && matchesSearch;
+    const matchesRegion = activeRegion === 'all' || (site && regionOf(site) === activeRegion);
+    const visible = matchesFilter && matchesSearch && matchesRegion;
     row.hidden = !visible;
     visibleCount += Number(visible);
   });
@@ -124,19 +152,105 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     document.querySelector('#site-search').focus();
   }
-  if (event.key === 'Escape') document.querySelector('#site-search').blur();
+  if (event.key === 'Escape') {
+    document.querySelector('#site-search').blur();
+    const root = document.querySelector('.cc-panels');
+    if (root && root.classList.contains('map-focus')) setMapFocus(false);
+  }
 });
 
 document.querySelector('#zoom-in').addEventListener('click', () => map.zoomIn());
 document.querySelector('#zoom-out').addEventListener('click', () => map.zoomOut());
 document.querySelector('#zoom-reset').addEventListener('click', () => {
-  if (provinceBounds) { fitMapToEdges(); return; }
+  if (provinceBounds) { focusRegion('all'); return; }
   const visibleSites = siteData.filter((site) => {
     const row = siteRows.find((candidate) => candidate.dataset.siteId === site.id);
     return row && !row.hidden;
   });
   if (visibleSites.length) map.fitBounds(L.latLngBounds(visibleSites.map((site) => [site.lat, site.lng])), { padding: [22, 22], maxZoom: 5 });
 });
+
+/* --- Tab wilayah: pilih pandangan operasional (menggeser + memfilter peta) --- */
+const mapTabs = [...document.querySelectorAll('.map-tab')];
+
+function fitRegion(region, animate) {
+  if (region === 'all') {
+    if (provinceBounds) fitMapToEdges();
+    return;
+  }
+  const points = siteData.filter((site) => regionOf(site) === region).map((site) => [site.lat, site.lng]);
+  if (!points.length) return;
+  mapUserMoved = false;
+  map.fitBounds(L.latLngBounds(points), { padding: [48, 48], maxZoom: 6, animate: Boolean(animate) });
+}
+
+function focusRegion(region) {
+  activeRegion = region;
+  mapTabs.forEach((tab) => {
+    const on = tab.dataset.region === region;
+    tab.classList.toggle('active', on);
+    tab.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  applyFilters();
+  fitRegion(region, true);
+}
+
+mapTabs.forEach((tab) => tab.addEventListener('click', () => focusRegion(tab.dataset.region)));
+
+/* Jumlah posko per wilayah pada label tab (statis, tidak bergantung filter). */
+(() => {
+  const counts = { all: siteData.length };
+  siteData.forEach((site) => {
+    const region = regionOf(site);
+    counts[region] = (counts[region] || 0) + 1;
+  });
+  mapTabs.forEach((tab) => {
+    const badge = tab.querySelector('b');
+    if (badge) badge.textContent = counts[tab.dataset.region] || 0;
+  });
+})();
+
+/* --- Rail alat peta: mode fokus, label situs, legenda --- */
+const panelsRoot = document.querySelector('.cc-panels');
+const fullscreenButton = document.querySelector('#map-fullscreen');
+
+function setMapFocus(on) {
+  if (!panelsRoot) return;
+  panelsRoot.classList.toggle('map-focus', on);
+  if (fullscreenButton) {
+    fullscreenButton.classList.toggle('is-active', on);
+    fullscreenButton.setAttribute('aria-pressed', on ? 'true' : 'false');
+    fullscreenButton.title = on ? 'Keluar mode fokus' : 'Mode fokus peta';
+  }
+  setTimeout(() => {
+    map.invalidateSize({ animate: false });
+    if (!mapUserMoved) fitRegion(activeRegion, false);
+  }, 280);
+}
+
+if (fullscreenButton) {
+  fullscreenButton.addEventListener('click', () => setMapFocus(!panelsRoot.classList.contains('map-focus')));
+}
+
+const labelsButton = document.querySelector('#map-labels');
+if (labelsButton) {
+  labelsButton.addEventListener('click', () => {
+    const off = mapFrame.classList.toggle('labels-off');
+    labelsButton.classList.toggle('is-off', off);
+    labelsButton.setAttribute('aria-pressed', off ? 'false' : 'true');
+    labelsButton.title = off ? 'Tampilkan label situs' : 'Sembunyikan label situs';
+  });
+}
+
+const legendButton = document.querySelector('#map-legend-toggle');
+if (legendButton) {
+  legendButton.addEventListener('click', () => {
+    const off = mapFrame.classList.toggle('legend-off');
+    legendButton.classList.toggle('is-off', off);
+    legendButton.setAttribute('aria-pressed', off ? 'false' : 'true');
+    legendButton.title = off ? 'Tampilkan legenda' : 'Sembunyikan legenda';
+  });
+}
 
 fetch('/data/indonesia-province-simple.json')
   .then((response) => {
@@ -201,7 +315,9 @@ function severityLevel(detections) {
   return worst === 'critical' ? 'critical' : worst === 'high' ? 'high' : 'medium';
 }
 
-const attackColor = { critical: '#ff4d6d', high: '#ffbb55', medium: '#48d183' };
+/* Warna jejak serangan pada peta — samakan dengan token palet TNI AD di garuda.css
+   (crimson bendera, kuning emas, hijau tentara). */
+const attackColor = { critical: '#cc5b53', high: '#e0b95f', medium: '#88b06c' };
 const recoveryPlaybook = [
   'Isolasi aset terdampak',
   'Blokir sumber serangan pada IDS/IPS',
@@ -227,6 +343,9 @@ function showAttackAlert(attack, level) {
   const subElement = document.querySelector('#attack-alert-sub');
   if (titleElement) titleElement.textContent = `Serangan simulasi: ${attack.method.name}`;
   if (subElement) subElement.textContent = `${attack.site.name} · ${attack.detections.length} alert · ${attack.method.code} · ${attack.method.vector}`;
+  /* Rincian target untuk strip sirene di bawah topbar. */
+  const stripMeta = document.querySelector('#alarm-strip-meta');
+  if (stripMeta) stripMeta.textContent = `${attack.site.code} · ${attack.site.name} · ${attack.method.code}`;
   const closeButton = document.querySelector('#attack-alert-close');
   if (closeButton) closeButton.onclick = () => { alertElement.hidden = true; };
 }
@@ -258,7 +377,7 @@ function drawAttackTrace(attack, level) {
   const originLng = Number(origin.lng);
   const originIp = typeof origin.ip === 'string' ? origin.ip : '';
   const target = [attack.site.lat, attack.site.lng];
-  const color = attackColor[level] || '#ff4d6d';
+  const color = attackColor[level] || '#cc5b53';
 
   if (!Number.isFinite(originLat) || !Number.isFinite(originLng) || !originIp) return;
 
@@ -356,6 +475,12 @@ let alarmCtx = null;
 let alarmGain = null;
 let sirenOscs = null;
 
+/* Status wail Web Audio. Dicatat terpisah karena AudioParam.gain.value TIDAK
+   mengikuti otomatisasi terjadwal (setTargetAtTime) — nilai statisnya tetap
+   0.0001, sehingga pemeriksaan "apakah sirene sedang berbunyi" lewat nilai gain
+   selalu mengembalikan false dan sirene cadangan tidak pernah terdeteksi. */
+let sirenActive = false;
+
 function openSiren() {
   const AudioCtor = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtor) return false;
@@ -381,8 +506,17 @@ function openSiren() {
   return true;
 }
 
+/**
+ * Whether the fallback wail is currently sounding.
+ *
+ * Must not inspect `alarmGain.gain.value`: AudioParam does not reflect
+ * scheduled automation, so the static value stays at 0.0001 forever and the
+ * wail would look silent even while it is playing.
+ *
+ * @returns {boolean}
+ */
 function sirenRunning() {
-  return Boolean(alarmCtx && alarmGain && alarmGain.gain.value > 0.01);
+  return sirenActive && Boolean(alarmCtx && alarmCtx.state !== 'closed');
 }
 
 function startSiren() {
@@ -391,11 +525,13 @@ function startSiren() {
   const now = alarmCtx.currentTime;
   alarmGain.gain.cancelScheduledValues(now);
   alarmGain.gain.setTargetAtTime(0.12, now, 0.08);
+  sirenActive = true;
   return true;
 }
 
 function stopSiren(hard) {
   if (!alarmCtx || !alarmGain) return;
+  sirenActive = false;
   const now = alarmCtx.currentTime;
   alarmGain.gain.cancelScheduledValues(now);
   alarmGain.gain.setTargetAtTime(0.0001, now, 0.04);
@@ -403,6 +539,7 @@ function stopSiren(hard) {
 }
 
 function cleanupSiren() {
+  sirenActive = false;
   if (sirenOscs) {
     for (const osc of sirenOscs) {
       try { osc.stop(); } catch (error) {}
@@ -416,7 +553,31 @@ function cleanupSiren() {
   alarmGain = null;
 }
 
+/* Indikator sirene yang lebih terlihat: strip peringatan di bawah topbar dan
+   tanda "sirene dimatikan" pada banner serangan. */
+const alarmStrip = document.querySelector('#alarm-strip');
+const alarmStripMeta = document.querySelector('#alarm-strip-meta');
+const alarmMuteTag = document.querySelector('#alarm-mute-tag');
+
+/* Apakah sirene sedang berbunyi? Sumber kebenarannya hanya dua: file mp3 yang
+   benar-benar diputar, atau wail Web Audio yang sudah dinyalakan.
+   Volume 0 berarti audio hanya dipakai untuk membuka izin pemutaran (primer),
+   bukan benar-benar berbunyi. */
+function alarmSounding() {
+  if (alarmMuted) return false;
+  if (alarmAudio && !alarmAudio.paused && alarmAudio.volume > 0.01) return true;
+  return sirenRunning();
+}
+
+function syncAlarmIndicators() {
+  const sounding = alarmSounding();
+  if (alarmStrip) alarmStrip.hidden = !sounding;
+  if (alarmMuteTag) alarmMuteTag.hidden = !alarmMuted;
+  document.body.classList.toggle('alarm-live', sounding);
+}
+
 function updateAlarmButton(active) {
+  syncAlarmIndicators();
   if (!alarmButton) return;
   alarmButton.hidden = false;
   if (!active) {
@@ -442,17 +603,22 @@ function startAlarm() {
     alarmAudio.volume = 0.85;
     alarmAudio.loop = true;
     const playback = alarmAudio.play();
-    if (playback && typeof playback.catch === 'function') {
-      playback.catch(() => {
+    /* Pemutaran dimulai belakangan (promise), jadi indikator disinkronkan lagi
+       tepat setelah sirene benar-benar berbunyi atau setelah cadangan wail
+       dinyalakan — bukan di awal, saat audio masih diam. */
+    if (playback && typeof playback.then === 'function') {
+      playback.then(syncAlarmIndicators).catch(() => {
         if (!startSiren() && alarmButton) {
           alarmButton.classList.add('blocked');
           alarmButton.textContent = 'AKTIFKAN ALARM';
         }
+        syncAlarmIndicators();
       });
     }
     return;
   }
   startSiren();
+  syncAlarmIndicators();
 }
 
 function stopAlarm() {
@@ -466,7 +632,7 @@ function stopAlarm() {
 
 if (alarmButton) {
   alarmButton.addEventListener('click', () => {
-    const playing = sirenRunning() || (alarmAudio && !alarmAudio.paused);
+    const playing = alarmSounding();
     if (playing) {
       /* Sirene berbunyi: klik menonaktifkan (mute, tersimpan antar sesi). */
       alarmMuted = true;
@@ -507,10 +673,16 @@ function primeAlarm() {
   const restoreVolume = alarmAudio.volume;
   alarmAudio.volume = 0;
   alarmAudio.play().then(() => {
+    /* Izin pemutaran sudah terbuka. Periksa dulu sebelum mengembalikan volume:
+       bila sirene justru baru dinyalakan kembali di antara keduanya (mis. tombol
+       alarm diaktifkan lagi saat insiden masih berjalan), jangan diamkan — itu
+       akan mematikan sirene yang baru saja hidup. */
+    const soundingElsewhere = alarmSounding();
+    alarmPrimed = true;
+    alarmAudio.volume = restoreVolume;
+    if (soundingElsewhere) return;
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
-    alarmAudio.volume = restoreVolume;
-    alarmPrimed = true;
     if (!sirenRunning()) updateAlarmButton(false);
   }).catch(() => { alarmAudio.volume = restoreVolume; });
 }
@@ -609,7 +781,7 @@ function stopAttackAnimation() {
   }
   map.closePopup();
   const frame = document.querySelector('#map-frame');
-  if (frame) frame.style.setProperty('--attack-color', '#48d183');
+  if (frame) frame.style.setProperty('--attack-color', '#88b06c');
   const alertElement = document.querySelector('#attack-alert');
   if (alertElement) {
     alertElement.className = 'attack-alert attack-alert-medium';

@@ -7,54 +7,54 @@
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; color: #17211c; background: #f2f5f2; margin: 0; padding: 24px 12px; }
-    .sheet { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid #d7e0d8; padding: 34px 40px 40px; }
-    .doc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 3px solid #123a32; padding-bottom: 14px; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color:#17211c; background:#f2f5f2; margin: 0; padding: 24px 12px; }
+    .sheet { max-width: 860px; margin: 0 auto; background:#ffffff; border:1px solid #d7e0d8; padding: 34px 40px 40px; }
+    .doc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom:3px solid #223319; padding-bottom: 14px; }
     .doc-head h1 { font-size: 18px; margin: 0 0 3px; letter-spacing: .03em; }
-    .doc-head small { display: block; color: #5f6d66; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
-    .doc-code { font-family: Consolas, monospace; font-size: 11px; color: #123a32; border: 1px solid #c7d5ca; border-radius: 6px; padding: 7px 12px; white-space: nowrap; }
-    .demo-stamp { display: inline-block; margin-top: 8px; font-family: Consolas, monospace; font-size: 9px; color: #8a5013; border: 1px dashed #d1a55c; background: #fdf6ea; padding: 5px 9px; border-radius: 5px; letter-spacing: .06em; }
+    .doc-head small { display: block; color:#778880; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .doc-code { font-family: Consolas, monospace; font-size: 11px; color:#223319; border:1px solid #c7d5ca; border-radius: 6px; padding: 7px 12px; white-space: nowrap; }
+    .demo-stamp { display: inline-block; margin-top: 8px; font-family: Consolas, monospace; font-size: 9px; color:#7e631f; border:1px dashed #d1b05c; background:#faf6ed; padding: 5px 9px; border-radius: 5px; letter-spacing: .06em; }
     section { margin-top: 24px; }
-    h2 { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #123a32; border-bottom: 1px solid #d7e0d8; padding-bottom: 6px; margin: 0 0 12px; }
+    h2 { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color:#223319; border-bottom:1px solid #d7e0d8; padding-bottom: 6px; margin: 0 0 12px; }
     .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .kv { border: 1px solid #e2e9e3; border-radius: 8px; padding: 10px 12px; }
-    .kv span { display: block; font-size: 9px; letter-spacing: .1em; color: #75817c; text-transform: uppercase; margin-bottom: 4px; }
+    .kv { border:1px solid #e2e9e3; border-radius: 8px; padding: 10px 12px; }
+    .kv span { display: block; font-size: 9px; letter-spacing: .1em; color:#798681; text-transform: uppercase; margin-bottom: 4px; }
     .kv strong { font-size: 13px; }
-    .kv small { font-size: 10.5px; color: #45544c; }
-    .narrative { font-size: 13px; line-height: 1.65; background: #f7faf7; border-left: 3px solid #245b4f; padding: 12px 16px; margin: 0 0 10px; }
-    .meta { font-size: 10.5px; color: #5f6d66; font-family: Consolas, monospace; }
+    .kv small { font-size: 10.5px; color:#738c7f; }
+    .narrative { font-size: 13px; line-height: 1.65; background:#f8faf7; border-left:3px solid #38552a; padding: 12px 16px; margin: 0 0 10px; }
+    .meta { font-size: 10.5px; color:#778880; font-family: Consolas, monospace; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { background: #123a32; color: #fff; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-align: left; padding: 8px 10px; }
-    td { border: 1px solid #e2e9e3; padding: 8px 10px; vertical-align: top; }
-    .sev { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .08em; border-radius: 999px; padding: 3px 9px; color: #fff; }
-    .sev-critical { background: #a13b34; } .sev-high { background: #9d6b1f; } .sev-medium { background: #4b7a56; } .sev-low { background: #63766d; }
-    .status-chip { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .06em; border-radius: 4px; padding: 3px 8px; border: 1px solid #c7d5ca; color: #45544c; background: #f4f7f4; }
-    .evidence { margin: 6px 0 0; padding: 0; list-style: none; font-size: 10.5px; color: #5f6d66; font-family: Consolas, monospace; }
+    th { background:#223319; color:#ffffff; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-align: left; padding: 8px 10px; }
+    td { border:1px solid #e2e9e3; padding: 8px 10px; vertical-align: top; }
+    .sev { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .08em; border-radius: 999px; padding: 3px 9px; color:#ffffff; }
+    .sev-critical { background:#8e372e; } .sev-high { background:#967626; } .sev-medium { background:#5b7a4b; } .sev-low { background:#63766d; }
+    .status-chip { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .06em; border-radius: 4px; padding: 3px 8px; border:1px solid #c7d5ca; color:#738c7f; background:#f4f7f4; }
+    .evidence { margin: 6px 0 0; padding: 0; list-style: none; font-size: 10.5px; color:#778880; font-family: Consolas, monospace; }
     .evidence li { margin-top: 2px; }
     .objects { margin: 0; padding-left: 20px; }
     .objects li { font-size: 12.5px; line-height: 1.75; }
-    .origin { border: 1px solid #e2e9e3; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; }
+    .origin { border:1px solid #e2e9e3; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; }
     .origin code { font-family: Consolas, monospace; font-weight: 700; font-size: 13px; }
-    .origin small { color: #75817c; }
-    .conf { display: inline-block; width: 130px; height: 6px; background: #e6ece7; border-radius: 999px; overflow: hidden; vertical-align: middle; margin: 0 6px; }
-    .conf i { display: block; height: 100%; background: #245b4f; }
-    .note { font-size: 11px; color: #5f6d66; margin: 8px 0 0; line-height: 1.55; }
+    .origin small { color:#798681; }
+    .conf { display: inline-block; width: 130px; height: 6px; background:#e6ece7; border-radius: 999px; overflow: hidden; vertical-align: middle; margin: 0 6px; }
+    .conf i { display: block; height: 100%; background:#38552a; }
+    .note { font-size: 11px; color:#778880; margin: 8px 0 0; line-height: 1.55; }
     .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 44px; }
     .sign { text-align: center; font-size: 12px; }
-    .sign .line { margin-top: 58px; border-top: 1px solid #17211c; padding-top: 6px; letter-spacing: .06em; font-size: 11px; }
-    footer { margin-top: 32px; border-top: 2px solid #123a32; padding-top: 10px; font-size: 9.5px; color: #5f6d66; font-family: Consolas, monospace; letter-spacing: .02em; line-height: 1.6; }
+    .sign .line { margin-top: 58px; border-top:1px solid #17211c; padding-top: 6px; letter-spacing: .06em; font-size: 11px; }
+    footer { margin-top: 32px; border-top:2px solid #223319; padding-top: 10px; font-size: 9.5px; color:#778880; font-family: Consolas, monospace; letter-spacing: .02em; line-height: 1.6; }
     .print-bar { max-width: 860px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .print-bar a { font-size: 12px; color: #123a32; }
-    .print-bar button { border: 1px solid #123a32; background: #123a32; color: #fff; border-radius: 8px; padding: 9px 18px; font-weight: 700; font-size: 13px; cursor: pointer; }
-    .missing { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid #d7e0d8; padding: 40px; text-align: center; font-size: 13px; }
-    .missing a { color: #123a32; }
+    .print-bar a { font-size: 12px; color:#223319; }
+    .print-bar button { border:1px solid #223319; background:#223319; color:#ffffff; border-radius: 8px; padding: 9px 18px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .missing { max-width: 860px; margin: 0 auto; background:#ffffff; border:1px solid #d7e0d8; padding: 40px; text-align: center; font-size: 13px; }
+    .missing a { color:#223319; }
     @media print {
-      body { background: #fff; padding: 0; }
+      body { background:#ffffff; padding: 0; }
       .sheet { border: none; max-width: none; padding: 0; }
       .print-bar { display: none; }
-      th { background: #123a32 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      th { background:#223319 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       section { break-inside: avoid; }
-      footer { border-color: #17211c; }
+      footer { border-color:#17211c; }
     }
   </style>
 </head>
@@ -173,11 +173,11 @@
     <section>
       <h2>F. Konteks jaringan terpantau (semua situs Kodam)</h2>
       <p style="font-size:12px; margin:0 0 10px">
-        Dari <strong><%= (laporan.networkSites || []).length %></strong> endpoint dummy yang terpantau: <strong style="color:#4b7a56"><%= (laporan.networkSites || []).filter(s => s.status === 'online').length %></strong> normal,
-        <strong style="color:#9d6b1f"><%= (laporan.networkSites || []).filter(s => s.status === 'warning').length %></strong> latensi tinggi,
-        <strong style="color:#a13b34"><%= (laporan.networkSites || []).filter(s => s.status === 'offline').length %></strong> tidak merespons,
+        Dari <strong><%= (laporan.networkSites || []).length %></strong> endpoint dummy yang terpantau: <strong style="color:#5b7a4b"><%= (laporan.networkSites || []).filter(s => s.status === 'online').length %></strong> normal,
+        <strong style="color:#967626"><%= (laporan.networkSites || []).filter(s => s.status === 'warning').length %></strong> latensi tinggi,
+        <strong style="color:#8e372e"><%= (laporan.networkSites || []).filter(s => s.status === 'offline').length %></strong> tidak merespons,
         <strong><%= (laporan.networkSites || []).filter(s => s.status === 'maintenance').length %></strong> pemeliharaan.
-        Target insiden ini ditandai <span style="border:1px solid #9d6b1f; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#fdf6ea; color:#8a5013">TARGET</span>.
+        Target insiden ini ditandai <span style="border:1px solid #967626; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#faf6ed; color:#8a5013">TARGET</span>.
       </p>
       <table>
         <thead>
@@ -192,7 +192,7 @@
             <td><strong><%= site.status.toUpperCase() %></strong></td>
             <td><%= site.latency === null ? '—' : `${site.latency} ms` %></td>
             <td><%= site.uptime %></td>
-            <td><% if (site.wasTarget) { %><span style="border:1px solid #9d6b1f; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#fdf6ea; color:#8a5013"><%= site.underAttack ? 'TARGET AKTIF' : 'TARGET' %></span><% } else { %>&mdash;<% } %></td>
+            <td><% if (site.wasTarget) { %><span style="border:1px solid #967626; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#faf6ed; color:#8a5013"><%= site.underAttack ? 'TARGET AKTIF' : 'TARGET' %></span><% } else { %>&mdash;<% } %></td>
           </tr>
           <% }) %>
         </tbody>
@@ -212,7 +212,7 @@
         </thead>
         <tbody>
           <% (laporan.incidents || []).forEach((inc, index) => { %>
-          <tr<%= inc.current ? ' style="background:#fdf6ea"' : '' %>>
+          <tr<%= inc.current ? ' style="background:#faf6ed"' : '' %>>
             <td><%= index + 1 %></td>
             <td style="font-size:10.5px"><%= new Date(inc.createdAt).toISOString().replace('T', ' ').slice(0, 19) %> UTC</td>
             <td><%= inc.site.name %> (<%= inc.site.code %>)</td>
