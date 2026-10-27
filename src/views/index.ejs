@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101b18">
+  <meta name="theme-color" content="#0b0f0c">
   <title>GARUDA SHIELD | TNI AD Cyber Command Center</title>
   <meta name="description" content="Dashboard peta &amp; konsol simulasi pertahanan siber TNI AD — deteksi, analisis AI, dan penangkalan insiden IT/OT (data demo Kartika Cyber 2026).">
-  <meta name="theme-color" content="#101b18">
+  <meta name="theme-color" content="#0b0f0c">
   <link rel="canonical" href="https://value.id.fadlanbersaudara.com/">
   <!-- Open Graph: tampilan saat link dibagikan ke medsos / WhatsApp -->
   <meta property="og:type" content="website">
@@ -62,6 +62,14 @@
         <div class="crumb"><span>TNI AD</span><i>/</i><strong>Cyber Command Center</strong></div>
         <div class="topbar-status"><span class="offline-badge"><span></span> PETA OFFLINE</span><span class="topbar-time" id="clock"><%= checkedAt %></span><button class="alarm-button" id="alarm-toggle" type="button" aria-pressed="false">ALARM SIAP</button><span class="cmd-loc" id="cmd-loc" hidden>◈ POS KOMANDO</span><span class="operator"><span class="operator-avatar">OP</span><span>Operator demo</span></span></div>
       </header>
+
+      <!-- Strip peringatan sirene: muncul otomatis selama sirene berbunyi.
+           Pita diagonal bergeser + glyph berputar menandakan keadaan mendesak. -->
+      <div class="alarm-strip" id="alarm-strip" role="status" aria-live="polite" hidden>
+        <span class="alarm-strip-glyph" aria-hidden="true">&#9673;</span>
+        <strong class="alarm-strip-title">SIRENE AKTIF &#183; SERANGAN SIMULASI TERDETEKSI</strong>
+        <span class="alarm-strip-meta" id="alarm-strip-meta"></span>
+      </div>
 
       <section class="cc-header" aria-label="Kepala pusat komando siber">
         <div class="cc-motto cc-motto-left">
@@ -154,20 +162,40 @@
         <section class="panel map-panel">
           <div class="map-heading">
             <div><span class="section-index">01 / GEOGRAFIS</span><h2>PETA INDONESIA (REALTIME)</h2></div>
-            <div class="map-tools"><span class="map-scale">INDONESIA · SKEMATIK</span><button class="icon-button" id="zoom-in" type="button" aria-label="Perbesar peta" title="Perbesar">+</button><button class="icon-button" id="zoom-out" type="button" aria-label="Perkecil peta" title="Perkecil">−</button><button class="icon-button" id="zoom-reset" type="button" aria-label="Reset zoom peta" title="Reset zoom">⌂</button></div>
+            <div class="map-tools"><span class="map-scale">INDONESIA · SKEMATIK</span><span class="map-source"><i></i> SUMBER: GEOJSON LOKAL</span></div>
           </div>
           <div class="map-frame" id="map-frame">
             <div class="map-grid"></div>
             <div id="map" role="img" aria-label="Peta provinsi Indonesia dengan titik situs dummy Kodam"></div>
             <div class="map-error" id="map-error" hidden>Peta provinsi lokal gagal dimuat.</div>
+            <nav class="map-rail" aria-label="Alat peta" aria-orientation="vertical">
+              <button class="rail-btn" id="map-fullscreen" type="button" aria-label="Mode fokus peta" title="Mode fokus peta" aria-pressed="false"><span aria-hidden="true">⛶</span></button>
+              <span class="rail-sep" aria-hidden="true"></span>
+              <button class="rail-btn" id="zoom-in" type="button" aria-label="Perbesar peta" title="Perbesar"><span aria-hidden="true">+</span></button>
+              <button class="rail-btn" id="zoom-out" type="button" aria-label="Perkecil peta" title="Perkecil"><span aria-hidden="true">−</span></button>
+              <button class="rail-btn" id="zoom-reset" type="button" aria-label="Reset tampilan peta" title="Reset tampilan"><span aria-hidden="true">⌂</span></button>
+              <span class="rail-sep" aria-hidden="true"></span>
+              <button class="rail-btn" id="map-labels" type="button" aria-label="Tampilkan label situs" title="Label situs" aria-pressed="true"><span aria-hidden="true">◎</span></button>
+              <button class="rail-btn" id="map-legend-toggle" type="button" aria-label="Tampilkan legenda peta" title="Legenda" aria-pressed="true"><span aria-hidden="true">▤</span></button>
+            </nav>
             <div class="map-legend"><span><i class="key-dot dot-online"></i> POSKO UTAMA</span><span><i class="key-dot dot-warning"></i> TITIK PERHATIAN</span><span><i class="key-dot dot-offline"></i> SIAGA PENUH</span><span><i class="key-dot dot-maintenance"></i> POSKO BANTUAN</span></div>
             <div class="map-watermark">SIMULATED SITE STATUS<br><strong>NO LIVE PROBES</strong></div>
             <div class="attack-alert" id="attack-alert" hidden>
               <span class="attack-alert-glyph" aria-hidden="true">⚠</span>
-              <div class="attack-alert-copy"><strong id="attack-alert-title">Serangan simulasi</strong><small id="attack-alert-sub">—</small></div>
+              <div class="attack-alert-copy"><strong id="attack-alert-title">Serangan simulasi</strong><small id="attack-alert-sub">-</small><span class="alarm-mute-tag" id="alarm-mute-tag" hidden>Sirene dimatikan</span></div>
               <button class="attack-alert-close" id="attack-alert-close" type="button" aria-label="Tutup notifikasi">×</button>
             </div>
           </div>
+          <nav class="map-tabs" role="group" aria-label="Tampilan wilayah peta">
+            <button class="map-tab active" type="button" data-region="all" aria-pressed="true">NASIONAL <b>—</b></button>
+            <button class="map-tab" type="button" data-region="sumatera" aria-pressed="false">SUMATERA <b>—</b></button>
+            <button class="map-tab" type="button" data-region="jawa" aria-pressed="false">JAWA <b>—</b></button>
+            <button class="map-tab" type="button" data-region="kalimantan" aria-pressed="false">KALIMANTAN <b>—</b></button>
+            <button class="map-tab" type="button" data-region="sulawesi" aria-pressed="false">SULAWESI <b>—</b></button>
+            <button class="map-tab" type="button" data-region="bali" aria-pressed="false">BALI–NUSA <b>—</b></button>
+            <button class="map-tab" type="button" data-region="maluku" aria-pressed="false">MALUKU <b>—</b></button>
+            <button class="map-tab" type="button" data-region="papua" aria-pressed="false">PAPUA <b>—</b></button>
+          </nav>
           <div class="map-footer"><span>BATAS PROVINSI: GEOJSON LOKAL · DATA © SUPERPIKAR</span><span>TANPA TILE INTERNET · SITUS DAN STATUS TETAP SIMULASI</span></div>
         </section>
 
@@ -304,12 +332,12 @@
               <% probeRows.forEach((row) => { %>
                 <tr class="probe-row" data-site-id="<%= row.id %>" data-status="<%= row.status %>" data-base-latency="<%= row.latency === null ? 0 : row.latency %>" data-checked-sec="<%= row.checkedSeconds %>" data-name="<%= row.name %>">
                   <td class="probe-endpoint"><span class="table-site-dot status-<%= row.status %>"></span><strong><%= row.code %></strong><span class="table-city"><%= row.city %></span></td>
-                  <td class="probe-response"><span class="resp-badge resp-<%= row.status %>" data-response><%= row.responseCode %></span><% if (row.maintenance) { %><span class="resp-note">PEMELIHARAAN</span><% } %></td>
-                  <td class="probe-tls" data-tls><%= row.tls %></td>
-                  <td class="probe-latency"><span class="lat-value" data-latency><%= row.latency === null ? '—' : `${row.latency} ms` %></span><span class="lat-bar"><i data-lat-bar data-width="<%= row.latency === null ? 100 : Math.min(100, Math.round(row.latency / 9)) %>"></i></span></td>
-                  <td class="probe-loss" data-loss><%= row.packetLoss %>%</td>
-                  <td class="probe-checked" data-checked>—</td>
-                  <td class="probe-condition"><span class="condition condition-<%= row.status %>" data-condition><%= row.condition %></span></td>
+                  <td class="probe-response" data-label="Respons"><span class="resp-badge resp-<%= row.status %>" data-response><%= row.responseCode %></span><% if (row.maintenance) { %><span class="resp-note">PEMELIHARAAN</span><% } %></td>
+                  <td class="probe-tls" data-label="TLS" data-tls><%= row.tls %></td>
+                  <td class="probe-latency" data-label="Latensi"><span class="lat-value" data-latency><%= row.latency === null ? '—' : `${row.latency} ms` %></span><span class="lat-bar"><i data-lat-bar data-width="<%= row.latency === null ? 100 : Math.min(100, Math.round(row.latency / 9)) %>"></i></span></td>
+                  <td class="probe-loss" data-label="Paket" data-loss><%= row.packetLoss %>%</td>
+                  <td class="probe-checked" data-label="Diperiksa" data-checked>—</td>
+                  <td class="probe-condition" data-label="Kondisi"><span class="condition condition-<%= row.status %>" data-condition><%= row.condition %></span></td>
                 </tr>
               <% }) %>
             </tbody>
@@ -320,16 +348,7 @@
 
       <div class="bottom-dock">
       <section class="workflow" aria-label="Alur operasi 8 langkah">
-        <div class="workflow-track">
-          <a class="flow-step flow-1" href="#sites"><span class="flow-num">1</span><span class="flow-glyph" aria-hidden="true">🖥</span><strong>OPERATOR</strong><small>Memperbarui data &amp; memantau situasi terkini</small></a>
-          <a class="flow-step flow-2" href="/konsol" target="_blank" rel="noopener"><span class="flow-num">2</span><span class="flow-glyph" aria-hidden="true">☗</span><strong>KONSOL RED TEAM</strong><small>Menganalisis ancaman, menentukan skenario</small></a>
-          <a class="flow-step flow-3" href="/konsol" target="_blank" rel="noopener"><span class="flow-num">3</span><span class="flow-glyph" aria-hidden="true">⚙</span><strong>SIMULASI EVENT</strong><small>Menjalankan simulasi skenario operasi</small></a>
-          <a class="flow-step flow-4" href="#deteksi"><span class="flow-num">4</span><span class="flow-glyph" aria-hidden="true">〜</span><strong>DETEKSI ANOMALI</strong><small>Mendeteksi pola mencurigakan secara real-time</small></a>
-          <a class="flow-step flow-5" href="#incidents"><span class="flow-num">5</span><span class="flow-glyph" aria-hidden="true">⛨</span><strong>SOLUTE &amp; AUDIT</strong><small>Mengamankan data, log dan audit trail</small></a>
-          <a class="flow-step flow-6" href="#ai-panel"><span class="flow-num">6</span><span class="flow-glyph" aria-hidden="true">🧠</span><strong>ANALISIS INSIDEN</strong><small>Menganalisis dampak, memberikan rekomendasi</small></a>
-          <a class="flow-step flow-7" href="#ai-panel"><span class="flow-num">7</span><span class="flow-glyph" aria-hidden="true">⚠</span><strong>ALERT &amp; PENANGANAN</strong><small>Notifikasi, tindakan prioritas, pemulihan</small></a>
-          <a class="flow-step flow-8" href="#incidents"><span class="flow-num">8</span><span class="flow-glyph" aria-hidden="true">📄</span><strong>LAPORAN INSIDEN</strong><small>Laporan lengkap, arsip &amp; evaluasi</small></a>
-        </div>
+        
       </section>
 
       <section class="modules" aria-label="Modul command center">

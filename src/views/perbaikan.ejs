@@ -3,78 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101b18">
+  <meta name="theme-color" content="#0b0f0c">
   <title>Petunjuk Teknis Perbaikan | GARUDA SHIELD</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/garuda.css">
   <style>
     .fix-main { padding: 22px 26px 48px; max-width: 1080px; }
-    .fix-crumb { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #8fa086; margin-bottom: 6px; }
-    .fix-crumb a { color: #a3e635; text-decoration: none; }
+    .fix-crumb { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color:#8fa086; margin-bottom: 6px; }
+    .fix-crumb a { color:#81b467; text-decoration: none; }
     .fix-crumb a:hover { text-decoration: underline; }
-    .fix-title { margin: 0 0 6px; color: #f2f6ec; font-size: 26px; letter-spacing: .02em; }
-    .fix-lead { margin: 0 0 22px; max-width: 70ch; color: #b6c4ad; font-size: 13px; line-height: 1.6; }
+    .fix-title { margin: 0 0 6px; color:#eff6ec; font-size: 26px; letter-spacing: .02em; }
+    .fix-lead { margin: 0 0 22px; max-width: 70ch; color:#b6c4ad; font-size: 13px; line-height: 1.6; }
 
-    .fix-alert { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #5d4a1c; background: #1c1708; border-left: 3px solid #ffb020; padding: 11px 14px; margin-bottom: 22px; border-radius: 4px; }
-    .fix-alert-glyph { color: #ffb020; font-size: 15px; line-height: 1.2; }
-    .fix-alert strong { display: block; color: #ffe6a8; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
-    .fix-alert p { margin: 0; color: #cdbd94; font-size: 12px; line-height: 1.55; }
+    .fix-alert { display: flex; gap: 10px; align-items: flex-start; border:1px solid #5d4b1c; background:#1c1608; border-left:3px solid #d2ac4d; padding: 11px 14px; margin-bottom: 22px; border-radius: 4px; }
+    .fix-alert-glyph { color:#d2ac4d; font-size: 15px; line-height: 1.2; }
+    .fix-alert strong { display: block; color:#eedfb9; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+    .fix-alert p { margin: 0; color:#cdbd94; font-size: 12px; line-height: 1.55; }
 
     .fix-toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
-    .fix-toc a { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid #33531e; background: #141c0e; color: #d5e0cc; font-size: 11px; letter-spacing: .04em; text-decoration: none; border-radius: 3px; transition: border-color .15s, color .15s; }
-    .fix-toc a:hover { border-color: #a3e635; color: #a3e635; }
+    .fix-toc a { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border:1px solid #324c25; background:#131c0e; color:#d3e0cc; font-size: 11px; letter-spacing: .04em; text-decoration: none; border-radius: 3px; transition: border-color .15s, color .15s; }
+    .fix-toc a:hover { border-color:#81b467; color:#81b467; }
     .fix-toc .toc-dot { width: 7px; height: 7px; border-radius: 50%; }
-    .toc-offline { background: #ff4d6d; }
-    .toc-warning { background: #ffb020; }
+    .toc-offline { background:#d16053; }
+    .toc-warning { background:#d2ac4d; }
 
-    .fix-guide { margin-bottom: 34px; border: 1px solid #33531e; background: linear-gradient(160deg, #12180c 0%, #0f130a 100%); box-shadow: 0 0 22px #a3e6350d, inset 0 0 24px #0d100955; }
-    .fix-head { display: flex; align-items: center; gap: 11px; padding: 13px 16px; border-bottom: 1px solid #26381a; background: #171f10; }
-    .fix-head .fix-glyph { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid #456b28; font-size: 14px; }
-    .fix-guide.sev-offline .fix-head { background: #24101a; border-bottom-color: #5d1f31; }
-    .fix-guide.sev-offline .fix-glyph { border-color: #7a2440; color: #ff8fa8; background: #2e1420; }
-    .fix-guide.sev-warning .fix-head { background: #241d08; border-bottom-color: #5d4a1c; }
-    .fix-guide.sev-warning .fix-glyph { border-color: #7a6420; color: #ffcf6d; background: #2e2510; }
-    .fix-head h2 { margin: 0; color: #e2ead8; font-size: 13px; letter-spacing: .06em; }
-    .fix-head small { display: block; color: #8fa086; font-size: 10px; letter-spacing: .04em; margin-top: 2px; }
+    .fix-guide { margin-bottom: 34px; border:1px solid #324c25; background:linear-gradient(160deg, #10180c 0%, #0d130a 100%); box-shadow:0 0 22px #81b46707, inset 0 0 24px #0b100955; }
+    .fix-head { display: flex; align-items: center; gap: 11px; padding: 13px 16px; border-bottom:1px solid #24371b; background:#151f10; }
+    .fix-head .fix-glyph { display: grid; width: 28px; height: 28px; place-items: center; border:1px solid #416231; font-size: 14px; }
+    .fix-guide.sev-offline .fix-head { background:#20100e; border-bottom-color:#52211b; }
+    .fix-guide.sev-offline .fix-glyph { border-color:#6b2720; color:#dd8a81; background:#281412; }
+    .fix-guide.sev-warning .fix-head { background:#231c09; border-bottom-color:#5d4b1c; }
+    .fix-guide.sev-warning .fix-glyph { border-color:#7a6120; color:#e2c98a; background:#2e2610; }
+    .fix-head h2 { margin: 0; color:#deead8; font-size: 13px; letter-spacing: .06em; }
+    .fix-head small { display: block; color:#8fa086; font-size: 10px; letter-spacing: .04em; margin-top: 2px; }
 
     .fix-body { padding: 16px 18px 18px; }
-    .fix-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-    @media (max-width: 720px) { .fix-cols { grid-template-columns: 1fr; } }
+    .fix-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+    @media (max-width: 720px) { .fix-cols { grid-template-columns: minmax(0, 1fr); } }
     .fix-block { margin-bottom: 16px; }
-    .fix-block > h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a3e635; border-bottom: 1px solid #26381a; padding-bottom: 6px; }
+    .fix-block > h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color:#81b467; border-bottom:1px solid #24371b; padding-bottom: 6px; }
     .fix-list { margin: 0; padding: 0; list-style: none; }
-    .fix-list li { position: relative; padding-left: 16px; margin-bottom: 7px; color: #c2cfb9; font-size: 12.5px; line-height: 1.6; }
-    .fix-list li::before { content: '▸'; position: absolute; left: 0; color: #6d8a4a; }
-    .fix-list li strong { color: #e2ead8; }
+    .fix-list li { position: relative; padding-left: 16px; margin-bottom: 7px; color:#c0cfb9; font-size: 12.5px; line-height: 1.6; }
+    .fix-list li::before { content: '▸'; position: absolute; left: 0; color:#5f8a4a; }
+    .fix-list li strong { color:#deead8; }
     .fix-steps { counter-reset: step; margin: 0; padding: 0; list-style: none; }
-    .fix-steps li { counter-increment: step; position: relative; padding-left: 34px; margin-bottom: 12px; color: #c2cfb9; font-size: 12.5px; line-height: 1.6; }
-    .fix-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid #456b28; color: #a3e635; background: #1d2812; font-size: 11px; font-weight: 700; border-radius: 3px; }
-    .fix-steps li strong { color: #e2ead8; }
-    .fix-cmd { display: block; margin-top: 6px; padding: 8px 11px; border: 1px solid #26381a; background: #0b0f07; color: #b6f08a; font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; border-radius: 3px; overflow-x: auto; white-space: pre; }
+    .fix-steps li { counter-increment: step; position: relative; padding-left: 34px; margin-bottom: 12px; color:#c0cfb9; font-size: 12.5px; line-height: 1.6; }
+    .fix-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; display: grid; width: 22px; height: 22px; place-items: center; border:1px solid #416231; color:#81b467; background:#1a2713; font-size: 11px; font-weight: 700; border-radius: 3px; }
+    .fix-steps li strong { color:#deead8; }
+    .fix-cmd { display: block; margin-top: 6px; padding: 8px 11px; border:1px solid #24371b; background:#0a0f07; color:#b6d3a7; font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; border-radius: 3px; overflow-x: auto; white-space: pre; }
 
     .fix-sites { margin-top: 4px; }
-    .fix-sites h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a3e635; border-bottom: 1px solid #26381a; padding-bottom: 6px; }
+    .fix-sites h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color:#81b467; border-bottom:1px solid #24371b; padding-bottom: 6px; }
     .fix-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .fix-table th { background: #171f10; color: #8fa086; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-align: left; padding: 7px 9px; border-bottom: 1px solid #26381a; }
-    .fix-table td { padding: 8px 9px; border-bottom: 1px solid #1a2411; color: #c2cfb9; vertical-align: middle; }
+    .fix-table th { background:#151f10; color:#8fa086; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; text-align: left; padding: 7px 9px; border-bottom:1px solid #24371b; }
+    .fix-table td { padding: 8px 9px; border-bottom:1px solid #172411; color:#c0cfb9; vertical-align: middle; }
     .fix-table tr:last-child td { border-bottom: none; }
-    .fix-table code { font-family: Consolas, monospace; color: #e2ead8; }
-    .fix-empty { padding: 12px 9px; color: #6d8a4a; font-size: 12px; font-style: italic; }
+    .fix-table-scroll { overflow-x: auto; }
+    .fix-table code { font-family: Consolas, monospace; color:#deead8; }
+    .fix-empty { padding: 12px 9px; color:#5f8a4a; font-size: 12px; font-style: italic; }
     .fix-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
-    .chip-offline-f { background: #ff4d6d22; color: #ff8fa8; border: 1px solid #7a2440; }
-    .chip-warning-f { background: #ffb02022; color: #ffcf6d; border: 1px solid #7a6420; }
+    .chip-offline-f { background:#d1605322; color:#dd8a81; border:1px solid #6b2720; }
+    .chip-warning-f { background:#d2ac4d22; color:#e2c98a; border:1px solid #7a6120; }
 
-    .fix-escalation { border: 1px dashed #456b28; background: #141c0e; padding: 13px 16px; border-radius: 4px; }
-    .fix-escalation h3 { margin: 0 0 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #a3e635; }
-    .fix-escalation p { margin: 0; color: #b6c4ad; font-size: 12px; line-height: 1.6; }
-    .fix-foot { margin-top: 26px; padding-top: 12px; border-top: 1px solid #26381a; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: #6d7b64; font-family: Consolas, monospace; font-size: 10px; letter-spacing: .02em; }
+    .fix-escalation { border:1px dashed #416231; background:#131c0e; padding: 13px 16px; border-radius: 4px; }
+    .fix-escalation h3 { margin: 0 0 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color:#81b467; }
+    .fix-escalation p { margin: 0; color:#b6c4ad; font-size: 12px; line-height: 1.6; }
+    .fix-foot { margin-top: 26px; padding-top: 12px; border-top:1px solid #24371b; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color:#7d8d72; font-family: Consolas, monospace; font-size: 10px; letter-spacing: .02em; }
   </style>
 </head>
 <body>
   <main class="fix-main">
     <nav class="fix-crumb" aria-label="Breadcrumb"><a href="/">GARUDA SHIELD</a><span>/</span><strong>Perbaikan</strong></nav>
     <h1 class="fix-title">Petunjuk Teknis Perbaikan</h1>
-    <p class="fix-lead">Prosedur standar penanganan gangguan endpoint dummy Kodam. Panduan ini menjelaskan gejala, penyebab umum, langkah mitigasi berurutan, perintah diagnostik, serta kriteria eskalasi untuk dua kondisi kritis: <strong style="color:#ff8fa8">TIDAK MERESPONS</strong> dan <strong style="color:#ffcf6d">LATENSI TINGGI</strong>.</p>
+    <p class="fix-lead">Prosedur standar penanganan gangguan endpoint dummy Kodam. Panduan ini menjelaskan gejala, penyebab umum, langkah mitigasi berurutan, perintah diagnostik, serta kriteria eskalasi untuk dua kondisi kritis: <strong style="color:#dd8a81">TIDAK MERESPONS</strong> dan <strong style="color:#e2c98a">LATENSI TINGGI</strong>.</p>
 
     <div class="fix-alert">
       <span class="fix-alert-glyph" aria-hidden="true">⚠</span>
@@ -95,6 +96,7 @@
         <% if (sites.length === 0) { %>
           <div class="fix-empty">Tidak ada situs dalam kondisi ini. Pemantauan normal.</div>
         <% } else { %>
+          <div class="fix-table-scroll">
           <table class="fix-table">
             <thead><tr><th>KODE</th><th>SATUAN</th><th>WILAYAH</th><th>LATENSI</th><th>UPTIME</th><th>KONDISI</th></tr></thead>
             <tbody>
@@ -110,6 +112,7 @@
               <% }) %>
             </tbody>
           </table>
+          </div>
         <% } %>
       </div>
     <% } %>
