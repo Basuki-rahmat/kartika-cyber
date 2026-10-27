@@ -100,6 +100,7 @@ Server mengikat ke `127.0.0.1:3000` (atur `PORT` bila port 3000 terpakai).
 | `GET /api/insiden-aktif` · `GET /api/serangan/:id` | Baca insiden simulasi. |
 | `POST /api/analisis` | Analisis insiden — heuristik lokal atau Groq (opsional). |
 | `POST /api/pulihkan` | Tandai insiden pulih. |
+| `GET /laporan` | Laporan kondisi normal siap cetak — dapat diakses kapan saja tanpa menunggu insiden (print browser untuk PDF). |
 | `GET /laporan/:attackId` | Laporan insiden 9 bagian A–I siap cetak (operator ke pimpinan; print browser untuk PDF). |
 | `POST /alerts/:id/status` · `POST /demo/reset` | Ubah status alert / reset data demo. |
 

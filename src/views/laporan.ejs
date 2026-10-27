@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= laporan ? `${laporan.reportCode} | Laporan Insiden GARUDA SHIELD` : 'Laporan insiden tidak ditemukan | GARUDA SHIELD' %></title>
+  <title><%= laporan ? (laporan.mode === 'normal' ? `${laporan.reportCode} | Laporan Kondisi Normal GARUDA SHIELD` : `${laporan.reportCode} | Laporan Insiden GARUDA SHIELD`) : 'Laporan insiden tidak ditemukan | GARUDA SHIELD' %></title>
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
@@ -74,14 +74,32 @@
   <article class="sheet">
     <header class="doc-head">
       <div>
+        <% if (laporan.mode === 'normal') { %>
+        <h1>LAPORAN KONDISI NORMAL — GARUDA SHIELD</h1>
+        <small>Pemeriksaan rutin &middot; purwarupa Defensive Shield</small>
+        <% } else { %>
         <h1>LAPORAN INSIDEN — GARUDA SHIELD</h1>
         <small>Operator ke pimpinan &middot; purwarupa Defensive Shield</small>
+        <% } %>
         <span class="demo-stamp">MODE DEMO &middot; SELURUH DATA SIMULASI &middot; BUKAN KONDISI SISTEM NYATA</span>
       </div>
       <div class="doc-code"><%= laporan.reportCode %></div>
     </header>
 
     <section>
+      <% if (laporan.mode === 'normal') { %>
+      <h2>A. Informasi ringkas pemantauan</h2>
+      <div class="summary-grid">
+        <div class="kv"><span>Kondisi umum</span><strong style="color:#38552a"><%= (laporan.stats.active_alert_count === 0 && (laporan.counts.warning + laporan.counts.offline) === 0) ? 'NORMAL' : 'PERLU PERHATIAN' %></strong> <small>tanpa insiden aktif</small></div>
+        <div class="kv"><span>Waktu pemeriksaan</span><strong style="font-size:11.5px"><%= laporan.createdAt %></strong></div>
+        <div class="kv"><span>Endpoint terpantau</span><strong><%= laporan.networkSites.length %> endpoint</strong></div>
+        <div class="kv"><span>Endpoint normal</span><strong style="color:#5b7a4b"><%= laporan.counts.online %> endpoint</strong></div>
+        <div class="kv"><span>Latensi tinggi</span><strong style="color:#967626"><%= laporan.counts.warning %> endpoint</strong></div>
+        <div class="kv"><span>Tidak merespons</span><strong style="color:#8e372e"><%= laporan.counts.offline %> endpoint</strong></div>
+        <div class="kv"><span>Pemeliharaan</span><strong><%= laporan.counts.maintenance %> endpoint</strong></div>
+        <div class="kv"><span>Alert terbuka</span><strong><%= laporan.stats.active_alert_count %></strong> <small>event tercatat <%= laporan.stats.event_count %></small></div>
+      </div>
+      <% } else { %>
       <h2>A. Informasi ringkas insiden</h2>
       <div class="summary-grid">
         <div class="kv"><span>Target</span><strong><%= laporan.record.site.name %></strong> <small>(<%= laporan.record.site.code %>)</small></div>
@@ -93,10 +111,11 @@
         <div class="kv"><span>Penilaian</span><strong><%= (laporan.analysis.status || 'perlu_tindakan') === 'aman' ? 'AMAN' : 'PERLU TINDAKAN' %></strong> <small>tingkat <%= laporan.analysis.severity %></small></div>
         <div class="kv"><span>Status penanganan</span><strong><%= (laporan.analysis.recovered || laporan.record.resolved) ? 'SUDAH DIPULIHKAN' : 'MASIH DIPANTAU' %></strong></div>
       </div>
+      <% } %>
     </section>
 
     <section>
-      <h2>B. Ringkasan analisis operator</h2>
+      <h2><%= laporan.mode === 'normal' ? 'B. Ringkasan pemeriksaan rutin' : 'B. Ringkasan analisis operator' %></h2>
       <p class="narrative"><%= laporan.analysis.summary %></p>
       <p class="meta">Model: <%= laporan.analysis.model %> &middot; Sumber: <%= laporan.analysis.source === 'groq' ? 'Groq API' : 'Heuristik lokal' %> &middot; Keyakinan: <%= laporan.analysis.confidence %>%<%= laporan.analysis.note ? ` · ${laporan.analysis.note}` : '' %></p>
       <% if ((laporan.analysis.actions || []).length) { %>
@@ -110,7 +129,7 @@
     <section>
       <h2>C. Deteksi dan status tindak lanjut</h2>
       <% if (laporan.alerts.length === 0) { %>
-        <p style="font-size:12px">Tidak ada aturan deteksi yang terpicu pada insiden ini.</p>
+        <p style="font-size:12px"><%= laporan.mode === 'normal' ? 'Tidak ada alert aktif pada pemeriksaan rutin ini.' : 'Tidak ada aturan deteksi yang terpicu pada insiden ini.' %></p>
       <% } else { %>
       <table>
         <thead>
@@ -144,7 +163,7 @@
     <section>
       <h2>D. Pelacakan asal serangan (metadata simulasi)</h2>
       <% if ((laporan.analysis.origins || []).length === 0) { %>
-        <p style="font-size:12px">Tidak ada metadata alamat sumber pada insiden ini.</p>
+        <p style="font-size:12px"><%= laporan.mode === 'normal' ? 'Tidak ada pelacakan asal — pemeriksaan rutin tidak memiliki koneksi serangan.' : 'Tidak ada metadata alamat sumber pada insiden ini.' %></p>
       <% } else { %>
         <% laporan.analysis.origins.forEach((origin) => { %>
         <div class="origin">
@@ -163,10 +182,14 @@
     </section>
 
     <section>
-      <h2>E. Playbook respons yang tercatat</h2>
+      <h2><%= laporan.mode === 'normal' ? 'E. Playbook respons (siaga)' : 'E. Playbook respons yang tercatat' %></h2>
+      <% if (laporan.mode === 'normal') { %>
+        <p style="font-size:12px">Tidak ada playbook yang dieksekusi karena tidak ada insiden. Playbook penanganan tetap dalam status siaga dan akan dijalankan otomatis bila terdeteksi serangan.</p>
+      <% } else { %>
       <ol class="objects">
         <% (laporan.record.responses || []).forEach((step) => { %><li><%= step %></li><% }) %>
       </ol>
+      <% } %>
     </section>
 
     <% if ((laporan.networkSites || []).length) { %>
@@ -177,7 +200,7 @@
         <strong style="color:#967626"><%= (laporan.networkSites || []).filter(s => s.status === 'warning').length %></strong> latensi tinggi,
         <strong style="color:#8e372e"><%= (laporan.networkSites || []).filter(s => s.status === 'offline').length %></strong> tidak merespons,
         <strong><%= (laporan.networkSites || []).filter(s => s.status === 'maintenance').length %></strong> pemeliharaan.
-        Target insiden ini ditandai <span style="border:1px solid #967626; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#faf6ed; color:#8a5013">TARGET</span>.
+        <% if (laporan.mode !== 'normal') { %>Target insiden ini ditandai <span style="border:1px solid #967626; border-radius:4px; padding:1px 7px; font-size:9px; font-weight:700; background:#faf6ed; color:#8a5013">TARGET</span>.<% } %>
       </p>
       <table>
         <thead>

@@ -40,12 +40,20 @@
       </a>
 
       <div class="rail-section-label">PUSAT OPERASI</div>
-      <nav class="rail-nav" aria-label="Navigasi utama">
+      <nav class="rail-nav" id="rail-nav" aria-label="Navigasi utama">
         <a class="rail-link active" href="#map"><span class="rail-icon">◈</span> Peta Indonesia <b>01</b></a>
         <a class="rail-link" href="#sites"><span class="rail-icon">⌘</span> Situs terpantau <b><%= totals.sites %></b></a>
         <a class="rail-link" href="#incidents"><span class="rail-icon">△</span> Insiden simulasi <b><%= stats.active_alert_count %></b></a>
         <a class="rail-link" href="/perbaikan" target="_blank" rel="noopener"><span class="rail-icon">🛠</span> Perbaikan <b>JDH</b></a>
         <a class="rail-link" href="/konsol" target="_blank" rel="noopener"><span class="rail-icon">⌖</span> Konsol penyerang <b>SIM ↗</b></a>
+      </nav>
+
+      <div class="rail-divider" role="separator" aria-hidden="true"></div>
+
+      <div class="rail-section-label">MATERI TIM</div>
+      <nav class="rail-nav rail-nav-external" aria-label="Materi tim">
+        <a class="rail-link" href="https://www.youtube.com/watch?v=YGzI_82Y0wY" target="_blank" rel="noopener"><span class="rail-icon">▶</span> YouTube <b>Cyber Community ↗</b></a>
+        <a class="rail-link" href="https://docs.google.com/presentation/d/1peA_-Wxd4ZOfZ8YqdWlbWxX0LTWFS0dv0X4MtvDS5dA/edit?slide=id.ha5c7aadc3f7661e_3_75#slide=id.ha5c7aadc3f7661e_3_75" target="_blank" rel="noopener"><span class="rail-icon">▤</span> Presentation <b>Slides ↗</b></a>
       </nav>
 
       <div class="rail-lower">
@@ -56,10 +64,12 @@
       <div class="rail-version"><span>GS / LOCAL BUILD</span><span>v0.2.0</span></div>
       <button class="rail-toggle" id="rail-toggle" type="button" title="Minimalkan panel kiri" aria-pressed="false"><span aria-hidden="true">‹</span></button>
     </aside>
+    <div class="rail-backdrop" id="rail-backdrop" hidden></div>
 
     <main class="main">
       <header class="topbar">
-        <div class="crumb"><span>TNI AD</span><i>/</i><strong>Cyber Command Center</strong></div>
+        <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="rail-nav"><span></span><span></span><span></span></button>
+        <div class="crumb"><span>TNI AD</span><i>/</i><strong>GARUDA SHIELD</strong></div>
         <div class="topbar-status"><span class="offline-badge"><span></span> PETA OFFLINE</span><span class="topbar-time" id="clock"><%= checkedAt %></span><button class="alarm-button" id="alarm-toggle" type="button" aria-pressed="false">ALARM SIAP</button><span class="cmd-loc" id="cmd-loc" hidden>◈ POS KOMANDO</span><span class="operator"><span class="operator-avatar">OP</span><span>Operator demo</span></span></div>
       </header>
 
@@ -161,7 +171,7 @@
         <div class="map-stack">
         <section class="panel map-panel">
           <div class="map-heading">
-            <div><span class="section-index">01 / GEOGRAFIS</span><h2>PETA INDONESIA (REALTIME)</h2></div>
+            <div><span class="section-index">01 / GEOGRAFIS</span><h2>PETA INDONESIA</h2></div>
             <div class="map-tools"><span class="map-scale">INDONESIA · SKEMATIK</span><span class="map-source"><i></i> SUMBER: GEOJSON LOKAL</span></div>
           </div>
           <div class="map-frame" id="map-frame">
@@ -205,7 +215,7 @@
             <span class="ai-model">MODEL <strong id="ai-model">—</strong></span>
           </div>
           <div class="ai-body">
-            <div class="ai-empty" id="ai-empty">Belum ada insiden. Luncurkan serangan dari <a href="/konsol" target="_blank" rel="noopener">Konsol Penyerang</a> untuk memicu analisis AI pada koordinat target.</div>
+            <div class="ai-empty" id="ai-empty">Belum ada insiden. Luncurkan serangan dari <a href="/konsol" target="_blank" rel="noopener">Konsol Penyerang</a> untuk memicu analisis AI pada koordinat target. Laporan tetap dapat dicetak dalam kondisi normal lewat <a href="/laporan" target="_blank" rel="noopener">Cetak laporan ↗</a>.</div>
             <div class="ai-content" id="ai-content" hidden>
               <div class="ai-status-row">
                 <span class="ai-status ai-status-loading" id="ai-status"><i></i> MENUNGGU</span>
@@ -305,6 +315,7 @@
             <span class="probe-chip chip-offline">OFFLINE <b id="probe-count-offline">0</b></span>
             <span class="probe-chip chip-maintenance">MAINT <b id="probe-count-maintenance">0</b></span>
             <button class="probe-run" id="probe-run" type="button">Jalankan pemeriksaan</button>
+            <a class="probe-run" href="/laporan" target="_blank" rel="noopener" title="Cetak laporan kondisi normal">Cetak laporan</a>
           </div>
         </div>
         <div class="probe-toolbar">
@@ -367,6 +378,15 @@
       </div>
     </main>
   </div>
+
+  <!-- Nav bar mobile (bottom tab): HOME · Analisis AI · Situs Dummy · Laporan -->
+  <nav class="mobile-nav" aria-label="Navigasi cepat mobile">
+    <a class="mobile-nav-link active" href="/"><span class="mobile-nav-icon" aria-hidden="true">🏠</span><span>HOME</span></a>
+    <a class="mobile-nav-link" href="#ai-panel"><span class="mobile-nav-icon" aria-hidden="true">🤖</span><span>Analisis AI</span></a>
+    <a class="mobile-nav-link" href="/situs-dummy/kodam-jaya"><span class="mobile-nav-icon" aria-hidden="true">🖥️</span><span>Situs Dummy</span></a>
+    <a class="mobile-nav-link" href="/laporan"><span class="mobile-nav-icon" aria-hidden="true">🗒️</span><span>Laporan</span></a>
+  </nav>
+
   <!-- "Air Raid Siren" by orangefreesounds.com — CC BY 4.0, commercial use permitted -->
   <audio id="alarm-audio" src="/air-raid-siren.mp3" loop preload="auto"></audio>
   <div class="perm-overlay" id="perm-overlay" hidden>
