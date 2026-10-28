@@ -1,4 +1,3 @@
-[]docs/Garuda Shield_ Pusat Operasi Siber.png
 # GARUDA SHIELD
 ![](docs/Garuda.jpg)
 
