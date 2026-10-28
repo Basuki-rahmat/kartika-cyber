@@ -1311,6 +1311,70 @@ setInterval(probeTick, 1000);
     setTimeout(() => { if (typeof map !== 'undefined' && map.invalidateSize) map.invalidateSize(); }, 240);
   });
 })();
+/* Menu hamburger: buka/tutup rail (laci navigasi) di tampilan mobile */
+(() => {
+  const toggle = document.querySelector('#nav-toggle');
+  const backdrop = document.querySelector('#rail-backdrop');
+  const railNav = document.querySelector('#rail-nav');
+  if (!toggle) return;
+
+  const setOpen = (open) => {
+    document.body.classList.toggle('nav-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Tutup menu navigasi' : 'Buka menu navigasi');
+    if (backdrop) backdrop.hidden = !open;
+  };
+
+  const isOpen = () => document.body.classList.contains('nav-open');
+
+  toggle.addEventListener('click', () => setOpen(!isOpen()));
+  if (backdrop) backdrop.addEventListener('click', () => setOpen(false));
+
+  /* Tutup laci saat salah satu tautan navigasi dipilih */
+  if (railNav) {
+    railNav.addEventListener('click', (event) => {
+      if (event.target.closest('a')) setOpen(false);
+    });
+  }
+
+  /* Tutup laci dengan tombol Escape */
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isOpen()) setOpen(false);
+  });
+
+  /* Pastikan laci tertutup bila ukuran jendela melebar ke layout desktop */
+  const desktop = window.matchMedia('(min-width: 821px)');
+  const onDesktop = (event) => { if (event.matches) setOpen(false); };
+  if (desktop.addEventListener) desktop.addEventListener('change', onDesktop);
+  else if (desktop.addListener) desktop.addListener(onDesktop);
+})();
+/* Tandai item aktif pada nav bar mobile (berdasarkan path & hash) */
+(() => {
+  const links = [...document.querySelectorAll('.mobile-nav-link')];
+  if (!links.length) return;
+
+  const sync = () => {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    let active = null;
+
+    if (path === '/') {
+      /* Di dashboard: HOME aktif; pindah bila hash menunjuk panel tertentu. */
+      if (hash === '#ai-panel') active = links.find((l) => l.hash === '#ai-panel');
+      else active = links.find((l) => l.getAttribute('href') === '/');
+    } else if (path.startsWith('/situs-dummy')) {
+      active = links.find((l) => l.pathname.startsWith('/situs-dummy'));
+    } else if (path.startsWith('/laporan')) {
+      active = links.find((l) => l.pathname.startsWith('/laporan'));
+    }
+
+    links.forEach((l) => l.classList.toggle('active', l === active));
+  };
+
+  sync();
+  window.addEventListener('hashchange', sync);
+  window.addEventListener('popstate', sync);
+})();
 /* Denyut angka Dashboard Situasi agar terasa hidup (simulasi, fluktuasi kecil) */
 /* Lebar bar dari server (atribut data-width) diterapkan saat halaman dimuat. */
 (() => {

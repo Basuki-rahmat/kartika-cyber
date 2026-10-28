@@ -295,6 +295,7 @@ code, kbd { font-family: var(--mono); }
 
 /* Responsive */
 @media (max-width: 1000px) {
+  :root { --text-scale: 1.2; }
   .site-nav { display: none; position: absolute; top: 100%; right: 24px; left: 24px; flex-direction: column; gap: 2px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
   .site-nav.open { display: flex; }
   .site-nav a { padding: 11px 13px; border-radius: var(--radius-sm); }
@@ -307,6 +308,7 @@ code, kbd { font-family: var(--mono); }
 }
 
 @media (max-width: 620px) {
+  :root { --text-scale: 1.05; }
   .header-inner { padding: 0 14px; gap: 12px; }
   .ops-link { font-size: 0; }
   .ops-link::after { content: "GS ↗"; font-size: 0.6875rem; }

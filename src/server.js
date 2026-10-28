@@ -556,6 +556,90 @@ app.post('/api/analisis', async (request, response) => {
   return response.json(result);
 });
 
+/* Laporan kondisi normal — dapat dicetak kapan saja tanpa menunggu insiden.
+   Menjadi tujuan default tombol "Cetak laporan" di panel AI (#ai-report)
+   sebelum ada insiden. */
+app.get('/laporan', (request, response) => {
+  const now = new Date();
+  const dashboard = getDashboardData();
+  const reportCode = `LPR/${now.toISOString().slice(0, 10).replaceAll('-', '')}/NORMAL`;
+
+  const counts = {
+    online: kodamSites.filter((site) => site.status === 'online').length,
+    warning: kodamSites.filter((site) => site.status === 'warning').length,
+    offline: kodamSites.filter((site) => site.status === 'offline').length,
+    maintenance: kodamSites.filter((site) => site.status === 'maintenance').length
+  };
+  const attention = counts.warning + counts.offline;
+  const kondisiNormal = attention === 0 && dashboard.stats.active_alert_count === 0;
+
+  const networkSites = kodamSites.map((site) => ({
+    id: site.id,
+    code: site.code,
+    name: site.name,
+    city: site.city,
+    status: site.status,
+    latency: site.latency,
+    uptime: site.uptime,
+    underAttack: false,
+    wasTarget: false
+  }));
+
+  const incidents = [...recentAttacks.values()]
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((entry) => ({
+      id: entry.id,
+      createdAt: entry.createdAt,
+      site: entry.site,
+      method: entry.method,
+      eventCount: entry.eventCount,
+      resolved: entry.resolved,
+      current: false,
+      attacker: entry.attacker ? (entry.attacker.location || entry.attacker.ip || '') : '',
+      provider: entry.attacker ? entry.attacker.provider : '',
+      vpn: Boolean(entry.attacker && entry.attacker.vpn),
+      tor: Boolean(entry.attacker && entry.attacker.tor)
+    }));
+
+  const analysis = {
+    model: 'heuristik-lokal',
+    source: 'lokal',
+    status: kondisiNormal ? 'aman' : 'perlu_tindakan',
+    recovered: kondisiNormal,
+    severity: counts.offline ? 'tinggi' : attention ? 'sedang' : 'rendah',
+    confidence: 94,
+    summary: kondisiNormal
+      ? `Pemeriksaan rutin tanpa insiden: seluruh ${kodamSites.length} endpoint terpantau normal, ${dashboard.stats.event_count} event tercatat pada data demo, dan tidak ada alert aktif.`
+      : `Pemeriksaan rutin tanpa insiden aktif, namun ${attention} endpoint perlu perhatian (${counts.warning} latensi tinggi, ${counts.offline} tidak merespons) dan ${dashboard.stats.active_alert_count} alert masih terbuka.`,
+    actions: kondisiNormal
+      ? ['Pertahankan pemantauan rutin seluruh endpoint.', 'Tetapkan jadwal pemeriksaan berkala sesuai siklus satuan.']
+      : [
+        'Verifikasi endpoint berstatus latensi tinggi atau tidak merespons pada peta situasi.',
+        'Tinjau alert terbuka pada dashboard dan tetapkan status tindak lanjut.',
+        'Susun laporan ulang setelah seluruh endpoint kembali normal.'
+      ],
+    attribution: '',
+    origins: [],
+    note: ''
+  };
+
+  return response.render('laporan', {
+    laporan: {
+      mode: 'normal',
+      record: null,
+      analysis,
+      alerts: dashboard.alerts,
+      audit: dashboard.audit,
+      reportCode,
+      networkSites,
+      incidents,
+      counts,
+      stats: dashboard.stats,
+      createdAt: formatDateTime(now)
+    }
+  });
+});
+
 app.get('/laporan/:attackId', (request, response) => {
   const attackId = request.params.attackId;
   const record = recentAttacks.get(attackId);
